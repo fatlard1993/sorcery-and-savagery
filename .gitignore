@@ -1,0 +1,9 @@
+# macos
+.DS_Store
+
+# build
+node_modules/
+build/
+
+# database
+.sorcery-and-savagery.json

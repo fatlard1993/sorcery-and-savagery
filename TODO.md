@@ -1,0 +1,8 @@
+- also allow for scroll to control camera pan
+- I think it would be better to not use tint for team identification and instead we can color the health bars according to team color (which we should make a part of the joining process, select from a subset, not full free-form)
+- the resources should take up 4 tiles of space
+- the buildings are also too small
+- there needs to be *some* logic to the terrain generation. I want to keep procedural generation, but with pattern configs. An example level definition would include configurations for river, ocean, lake, pond, stone, dirt, forest (look at the void-driller level configs, for some inspiration)
+- redirect to root when on a dead game id page
+- add a simple health bar frame for all health bars
+- initialize this as a git repo
