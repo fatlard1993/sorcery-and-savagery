@@ -1,6 +1,6 @@
 import { styled, Component, Button, Elem, Input } from 'vanilla-bean-components';
 import { STARTING_GROUPS } from '../constants/index.js';
-import { joinGame } from './api/game.js';
+import { joinGame, getGame } from './api/game.js';
 import gameContext from './shared/gameContext.js';
 
 export default class Join extends styled.Component`
@@ -60,8 +60,17 @@ export default class Join extends styled.Component`
 		this.playerName = sessionStorage.getItem('playerName') || '';
 	}
 
-	render() {
+	async render() {
 		super.render();
+
+		// Check if game exists
+		try {
+			await getGame({ gameId: this.gameId });
+		} catch (error) {
+			console.error('Game not found:', error);
+			window.location.href = '#/';
+			return;
+		}
 
 		new Elem({
 			appendTo: this,
@@ -128,20 +137,26 @@ export default class Join extends styled.Component`
 	}
 
 	async join() {
-		const result = await joinGame({
-			gameId: this.gameId,
-			body: {
-				playerName: this.playerName,
-				startingGroup: this.selectedGroup,
-			},
-		});
+		try {
+			const result = await joinGame({
+				gameId: this.gameId,
+				body: {
+					playerName: this.playerName,
+					startingGroup: this.selectedGroup,
+				},
+			});
 
-		// Store in game context
-		gameContext.gameId = this.gameId;
-		gameContext.playerId = result.body.playerId;
-		gameContext.serverState = result.body.game;
+			// Store in game context
+			gameContext.gameId = this.gameId;
+			gameContext.playerId = result.body.playerId;
+			gameContext.serverState = result.body.game;
 
-		// Navigate to game
-		window.location.href = `#/play/${this.gameId}`;
+			// Navigate to game
+			window.location.href = `#/play/${this.gameId}`;
+		} catch (error) {
+			console.error('Failed to join game:', error);
+			// Redirect to home if game doesn't exist
+			window.location.href = '#/';
+		}
 	}
 }

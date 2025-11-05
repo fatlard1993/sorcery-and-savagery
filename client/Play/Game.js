@@ -1,7 +1,7 @@
 import { styled, Component } from 'vanilla-bean-components';
 import Phaser from 'phaser';
-import GameScene from './GameScene.js';
 import gameContext from '../shared/gameContext.js';
+import GameScene from './GameScene.js';
 
 export default class Game extends styled.Component`
 	flex: 1;

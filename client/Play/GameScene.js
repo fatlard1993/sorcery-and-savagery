@@ -39,7 +39,10 @@ export default class GameScene extends Phaser.Scene {
 
 		// Load building images
 		this.load.image('town_center', '/assets/buildings/town_center.png');
-		this.load.image('house', '/assets/buildings/house.png');
+		this.load.spritesheet('house', '/assets/buildings/house.png', {
+			frameWidth: 64,
+			frameHeight: 64,
+		});
 		this.load.image('barracks', '/assets/buildings/barracks.png');
 		this.load.image('archery_range', '/assets/buildings/archery_range.png');
 		this.load.image('mine', '/assets/buildings/mine.png');
@@ -82,6 +85,13 @@ export default class GameScene extends Phaser.Scene {
 
 		// Load initial game state from server
 		const state = gameContext.serverState;
+
+		// Guard against missing state (e.g., if navigating to dead game)
+		if (!state || !state.players || !state.world) {
+			console.error('GameScene: Invalid game state, cannot create scene');
+			return;
+		}
+
 		console.log('Creating terrain:', state.world?.terrain?.length, 'tiles');
 
 		// Populate gameContext with server data
@@ -135,6 +145,24 @@ export default class GameScene extends Phaser.Scene {
 		this.input.on('pointermove', onPointerMove);
 		this.input.on('pointerup', onPointerUp);
 		this.input.keyboard.on('keydown', onKeyDown);
+
+		// Mouse wheel camera pan
+		this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
+			const camera = this.cameras.main;
+			const panSpeed = 2;
+
+			// Native horizontal scroll (trackpad/mouse side scroll)
+			if (deltaX !== 0) {
+				camera.scrollX += deltaX * panSpeed;
+			}
+
+			// Shift+wheel for horizontal scroll, regular wheel for vertical
+			if (pointer.event.shiftKey) {
+				camera.scrollX += deltaY * panSpeed;
+			} else {
+				camera.scrollY += deltaY * panSpeed;
+			}
+		});
 
 		// Create selection rectangle (initially hidden)
 		gameContext.selectionRect = this.add.rectangle(0, 0, 0, 0, 0x00FF00, 0.2);

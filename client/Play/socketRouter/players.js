@@ -1,5 +1,9 @@
 import gameContext from '../../shared/gameContext.js';
 
+/**
+ *
+ * @param data
+ */
 export default function players(data) {
 	switch (data.update) {
 		case 'playerJoined': {

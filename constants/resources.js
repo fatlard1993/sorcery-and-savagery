@@ -5,6 +5,7 @@ export const RESOURCE_TYPES = {
 		resourceType: 'food', // Standing forests provide food (berries, game)
 		alternateResourceType: 'wood', // Or can be cut down for wood
 		sprite: 'forest',
+		size: { width: 3, height: 3 }, // Occupies 3x3 grid
 		amount: 500,
 		maxAmount: 500,
 		gatherRate: 3, // Food gathering rate
@@ -15,6 +16,7 @@ export const RESOURCE_TYPES = {
 		name: 'Stone Deposit',
 		resourceType: 'stone',
 		sprite: 'stone_deposit',
+		size: { width: 2, height: 2 }, // Occupies 2x2 grid
 		amount: 800,
 		maxAmount: 800,
 		gatherRate: 4,
@@ -24,6 +26,7 @@ export const RESOURCE_TYPES = {
 		name: 'Water Source',
 		resourceType: 'water',
 		sprite: 'water_source',
+		size: { width: 2, height: 2 }, // Occupies 2x2 grid
 		amount: Infinity, // Water doesn't deplete
 		maxAmount: Infinity,
 		gatherRate: 5,

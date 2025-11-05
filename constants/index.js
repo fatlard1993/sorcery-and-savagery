@@ -35,8 +35,8 @@ export const TERRAIN_TYPES = {
 		id: 'mountain',
 		name: 'Mountain',
 		sprite: 'mountain',
-		walkable: false,
-		buildable: false,
+		walkable: true,
+		buildable: true,
 	},
 };
 

@@ -1,6 +1,10 @@
 import gameContext from '../../shared/gameContext.js';
 import Unit from '../GameObjects/Unit.js';
 
+/**
+ *
+ * @param data
+ */
 export default function units(data) {
 	const unitsLayer = gameContext.sceneLayers.units;
 
@@ -18,9 +22,13 @@ export default function units(data) {
 		}
 
 		case 'unitMove': {
-			// Unit starting to move - just acknowledge the command
-			// Visual movement will be handled by unitMoved events as waypoints are reached
-			console.log('unitMove: Unit starting movement', data.unitId);
+			// Unit starting to move - update unit data with path
+			const unit = gameContext.units.get(data.unitId);
+			if (unit && data.path) {
+				unit.path = data.path;
+				unit.status = 'moving';
+				console.log('unitMove: Unit starting movement', data.unitId, 'path length:', data.path.length);
+			}
 			break;
 		}
 
@@ -74,6 +82,17 @@ export default function units(data) {
 
 			gameContext.units.delete(data.unitId);
 			gameContext.selectedUnits.delete(data.unitId);
+			break;
+		}
+
+		case 'unitTaskAssigned': {
+			// Update unit status and current action in game context
+			const unit = gameContext.units.get(data.unitId);
+			if (unit) {
+				unit.status = data.status;
+				unit.currentAction = data.currentAction;
+				console.log(`Unit ${data.unitId} assigned task:`, data.status, data.currentAction);
+			}
 			break;
 		}
 	}

@@ -22,13 +22,19 @@ export default class Unit extends Phaser.GameObjects.Container {
 		this.playerColor = PLAYER_COLORS[playerIndex] || 0xffffff;
 		// this.sprite.setTint(this.playerColor);
 
-		// Health bar background
-		this.healthBarBg = scene.add.rectangle(0, -20, 32, 3, 0x000000);
+		// Health bar background (positioned lower to stay within grid space)
+		this.healthBarBg = scene.add.rectangle(0, -13, 32, 3, 0x000000);
 		this.add(this.healthBarBg);
 
 		// Health bar
-		this.healthBar = scene.add.rectangle(0, -20, 32, 3, this.playerColor);
+		this.healthBar = scene.add.rectangle(0, -13, 32, 3, this.playerColor);
 		this.add(this.healthBar);
+
+		// Health bar frame
+		this.healthBarFrame = scene.add.rectangle(0, -13, 32, 3);
+		this.healthBarFrame.setStrokeStyle(1, 0xffffff, 0.8);
+		this.healthBarFrame.setFillStyle(0x000000, 0);
+		this.add(this.healthBarFrame);
 
 		this.updateHealthBar();
 
@@ -79,7 +85,7 @@ export default class Unit extends Phaser.GameObjects.Container {
 
 	setSelected(selected) {
 		this.unitData.selected = selected;
-		if (selected) this.sprite.setTint(this.playerColor);
+		if (selected) this.sprite.setTint(0x00FF00);
 		else this.sprite.clearTint();
 	}
 

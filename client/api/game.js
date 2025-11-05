@@ -47,3 +47,11 @@ export const produceUnit = async ({ buildingId, unitType }, options) =>
 		body: { unitType },
 		...options,
 	});
+
+export const assignTask = async ({ unitId, taskType, targetId }, options) =>
+	await POST('/api/games/:gameId/players/:playerId/units/:unitId/task', {
+		urlParameters: { ...apiContext(), unitId },
+		body: { taskType, targetId },
+		cache: false,
+		...options,
+	});

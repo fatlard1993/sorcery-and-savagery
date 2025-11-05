@@ -1,6 +1,12 @@
 import { getNeighbors, gridDistance, isValidGridPosition } from './grid.js';
 
 // Simple A* pathfinding
+/**
+ *
+ * @param start
+ * @param goal
+ * @param isWalkable
+ */
 export function findPath(start, goal, isWalkable = () => true) {
 	if (!isValidGridPosition(start) || !isValidGridPosition(goal)) {
 		return [];
@@ -65,6 +71,11 @@ export function findPath(start, goal, isWalkable = () => true) {
 	return [];
 }
 
+/**
+ *
+ * @param cameFrom
+ * @param current
+ */
 function reconstructPath(cameFrom, current) {
 	const path = [current];
 	let currentKey = posKey(current);
@@ -84,15 +95,29 @@ function reconstructPath(cameFrom, current) {
 	return path;
 }
 
+/**
+ *
+ * @param pos
+ */
 function posKey(pos) {
 	return `${pos.x},${pos.y}`;
 }
 
+/**
+ *
+ * @param key
+ */
 function keyToPos(key) {
 	const [x, y] = key.split(',').map(Number);
 	return { x, y };
 }
 
+/**
+ *
+ * @param start
+ * @param goal
+ * @param isWalkable
+ */
 export function isPathClear(start, goal, isWalkable) {
 	const path = findPath(start, goal, isWalkable);
 	return path.length > 0;

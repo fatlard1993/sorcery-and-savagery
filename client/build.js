@@ -18,6 +18,10 @@ const build = async () => {
 
 	if (buildResults.success) {
 		console.log('✓ Build successful');
+		// Signal to devConsole that build succeeded (triggers hot reload)
+		if (process.env.NODE_ENV === 'development') {
+			console.log('build.success');
+		}
 		return 'success';
 	} else {
 		console.error('✗ Build failed:');

@@ -1,6 +1,10 @@
 import gameContext from '../../shared/gameContext.js';
 import Building from '../GameObjects/Building.js';
 
+/**
+ *
+ * @param data
+ */
 export default function buildings(data) {
 	const buildingsLayer = gameContext.sceneLayers.buildings;
 

@@ -1,5 +1,11 @@
 import { WORLD_CONFIG } from '../constants/index.js';
 
+/**
+ *
+ * @param root0
+ * @param root0.x
+ * @param root0.y
+ */
 export function gridToPxPosition({ x, y }) {
 	return {
 		x: x * WORLD_CONFIG.tileSize + WORLD_CONFIG.tileSize / 2,
@@ -7,6 +13,12 @@ export function gridToPxPosition({ x, y }) {
 	};
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.x
+ * @param root0.y
+ */
 export function pxToGridPosition({ x, y }) {
 	return {
 		x: Math.floor(x / WORLD_CONFIG.tileSize),
@@ -14,6 +26,12 @@ export function pxToGridPosition({ x, y }) {
 	};
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.x
+ * @param root0.y
+ */
 export function isValidGridPosition({ x, y }) {
 	return (
 		x >= 0 &&
@@ -23,16 +41,32 @@ export function isValidGridPosition({ x, y }) {
 	);
 }
 
+/**
+ *
+ * @param pos1
+ * @param pos2
+ */
 export function gridDistance(pos1, pos2) {
 	return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
 }
 
+/**
+ *
+ * @param pos1
+ * @param pos2
+ */
 export function euclideanDistance(pos1, pos2) {
 	const dx = pos2.x - pos1.x;
 	const dy = pos2.y - pos1.y;
 	return Math.sqrt(dx * dx + dy * dy);
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.x
+ * @param root0.y
+ */
 export function getNeighbors({ x, y }) {
 	return [
 		{ x: x + 1, y },
@@ -42,6 +76,11 @@ export function getNeighbors({ x, y }) {
 	].filter(isValidGridPosition);
 }
 
+/**
+ *
+ * @param center
+ * @param radius
+ */
 export function getCellsInRadius(center, radius) {
 	const cells = [];
 	for (let dx = -radius; dx <= radius; dx++) {
@@ -55,6 +94,11 @@ export function getCellsInRadius(center, radius) {
 	return cells;
 }
 
+/**
+ *
+ * @param topLeft
+ * @param size
+ */
 export function getCellsInRect(topLeft, size) {
 	const cells = [];
 	for (let x = 0; x < size.width; x++) {
@@ -68,20 +112,39 @@ export function getCellsInRect(topLeft, size) {
 	return cells;
 }
 
+/**
+ *
+ * @param vec
+ */
 export function normalize(vec) {
 	const length = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
 	if (length === 0) return { x: 0, y: 0 };
 	return { x: vec.x / length, y: vec.y / length };
 }
 
+/**
+ *
+ * @param vec1
+ * @param vec2
+ */
 export function subtract(vec1, vec2) {
 	return { x: vec1.x - vec2.x, y: vec1.y - vec2.y };
 }
 
+/**
+ *
+ * @param vec1
+ * @param vec2
+ */
 export function add(vec1, vec2) {
 	return { x: vec1.x + vec2.x, y: vec1.y + vec2.y };
 }
 
+/**
+ *
+ * @param vec
+ * @param scalar
+ */
 export function multiply(vec, scalar) {
 	return { x: vec.x * scalar, y: vec.y * scalar };
 }

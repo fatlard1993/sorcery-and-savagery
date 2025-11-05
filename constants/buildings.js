@@ -8,7 +8,7 @@ export const BUILDINGS = {
 		cost: {
 			wood: 500,
 			stone: 500,
-			gold: 0,
+			iron: 0,
 			food: 0,
 		},
 		constructionTime: 120, // seconds
@@ -16,7 +16,7 @@ export const BUILDINGS = {
 		maxHealth: 2000,
 		produces: ['worker'],
 		isDropoff: true,
-		resourceTypes: ['wood', 'stone', 'gold', 'food'],
+		resourceTypes: ['wood', 'stone', 'iron', 'food'],
 		populationProvided: 5,
 	},
 	house: {
@@ -28,7 +28,7 @@ export const BUILDINGS = {
 		cost: {
 			wood: 100,
 			stone: 50,
-			gold: 0,
+			iron: 0,
 			food: 0,
 		},
 		constructionTime: 30, // seconds
@@ -46,7 +46,7 @@ export const BUILDINGS = {
 		cost: {
 			wood: 200,
 			stone: 150,
-			gold: 0,
+			iron: 0,
 			food: 0,
 		},
 		constructionTime: 60, // seconds
@@ -64,7 +64,7 @@ export const BUILDINGS = {
 		cost: {
 			wood: 250,
 			stone: 100,
-			gold: 0,
+			iron: 0,
 			food: 0,
 		},
 		constructionTime: 60, // seconds
@@ -103,7 +103,7 @@ export const BUILDINGS = {
 		cost: {
 			wood: 100,
 			stone: 0,
-			gold: 0,
+			iron: 0,
 			food: 0,
 		},
 		constructionTime: 35, // seconds

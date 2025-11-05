@@ -1,9 +1,9 @@
 import { styled, Component } from 'vanilla-bean-components';
+import { onMessage } from '../../byod-web-game/client/socket.js';
+import gameContext from '../shared/gameContext.js';
 import Game from './Game.js';
 import ResourceHUD from './ResourceHUD.js';
-import { onMessage } from '../../byod-web-game/client/socket.js';
 import socketRouter from './socketRouter/index.js';
-import gameContext from '../shared/gameContext.js';
 
 export default class Play extends styled.Component`
 	display: flex;
@@ -26,10 +26,25 @@ export default class Play extends styled.Component`
 	async loadGameState() {
 		// Fetch fresh game state from server
 		const { getGame } = await import('../api/game.js');
-		const result = await getGame({ gameId: this.gameId });
+		try {
+			const result = await getGame({ gameId: this.gameId });
 
-		gameContext.serverState = result.body;
-		console.log('Loaded fresh game state:', gameContext.serverState);
+			// Check if request failed
+			if (!result.success) {
+				console.error('Game not found');
+				window.location.href = '#/';
+				return false;
+			}
+
+			gameContext.serverState = result.body;
+			console.log('Loaded fresh game state:', gameContext.serverState);
+			return true;
+		} catch (error) {
+			console.error('Failed to load game:', error);
+			// Redirect to home if game doesn't exist
+			window.location.href = '#/';
+			return false;
+		}
 	}
 
 	async render() {
@@ -37,7 +52,8 @@ export default class Play extends styled.Component`
 		super.render();
 
 		// Load fresh game state before initializing
-		await this.loadGameState();
+		const loaded = await this.loadGameState();
+		if (!loaded) return; // Stop rendering if game failed to load
 
 		// Set up socket message handler
 		this.socketCleanup = onMessage(socketRouter);

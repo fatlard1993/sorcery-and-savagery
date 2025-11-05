@@ -3,6 +3,10 @@ import routerUtil from '../../byod-web-game/server/router.js';
 import gameRouter from './game.js';
 import staticRouter from './static.js';
 
+/**
+ *
+ * @param server
+ */
 export default function router(server) {
 	return async (req) => {
 		const url = new URL(req.url, `http://${req.headers.get('host')}`);

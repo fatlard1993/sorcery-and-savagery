@@ -1,8 +1,12 @@
+import gameContext from '../../shared/gameContext.js';
 import units from './units.js';
 import buildings from './buildings.js';
 import players from './players.js';
-import gameContext from '../../shared/gameContext.js';
 
+/**
+ *
+ * @param data
+ */
 export default function socketRouter(data) {
 	console.log('Socket message:', data);
 
@@ -28,6 +32,7 @@ export default function socketRouter(data) {
 		case 'unitMoving':
 		case 'unitAttacked':
 		case 'unitDestroyed':
+		case 'unitTaskAssigned':
 			units(data);
 			break;
 

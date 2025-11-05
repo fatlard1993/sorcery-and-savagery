@@ -1,7 +1,24 @@
 import { styled, Component, Button, Elem, Input } from 'vanilla-bean-components';
-import { STARTING_GROUPS } from '../constants/index.js';
+import { UNITS } from '../constants/index.js';
 import { createGame, joinGame } from './api/game.js';
 import gameContext from './shared/gameContext.js';
+
+const BASE_CLASSES = ['worker', 'warrior', 'archer', 'mage', 'healer'];
+const MAX_UNITS = 7;
+
+const FANTASY_NAMES = [
+	'Aldric', 'Branwen', 'Cael', 'Daveth', 'Elara', 'Finn', 'Gwendolyn',
+	'Haldor', 'Isolde', 'Jorah', 'Kaelin', 'Lyra', 'Maddox', 'Nyx',
+	'Orion', 'Petra', 'Quinn', 'Rowan', 'Soren', 'Thalia', 'Ulric',
+	'Vex', 'Wren', 'Xander', 'Yara', 'Zephyr',
+];
+
+/**
+ *
+ */
+function generateRandomName() {
+	return FANTASY_NAMES[Math.floor(Math.random() * FANTASY_NAMES.length)];
+}
 
 export default class StartingGroup extends styled.Component`
 	display: flex;
@@ -10,6 +27,7 @@ export default class StartingGroup extends styled.Component`
 	padding: 40px;
 	height: 100vh;
 	overflow-y: auto;
+	width: 100%;
 
 	h1 {
 		font-size: 2.5em;
@@ -19,14 +37,20 @@ export default class StartingGroup extends styled.Component`
 
 	.subtitle {
 		color: #aaa;
-		margin-bottom: 30px;
+		margin-bottom: 20px;
 	}
 
 	.player-name-input {
 		margin-bottom: 30px;
 	}
 
-	.groups {
+	.counter {
+		font-size: 1.2em;
+		color: #FFD700;
+		margin-bottom: 20px;
+	}
+
+	.unit-classes {
 		display: flex;
 		gap: 20px;
 		margin-bottom: 30px;
@@ -34,140 +58,238 @@ export default class StartingGroup extends styled.Component`
 		justify-content: center;
 	}
 
-	.group-card {
+	.unit-card {
 		border: 3px solid #444;
 		padding: 20px;
-		cursor: pointer;
-		transition: all 0.2s;
 		background: #222;
-		min-width: 250px;
-		max-width: 300px;
-
-		&:hover {
-			border-color: #FFD700;
-			transform: translateY(-5px);
-		}
-
-		&.selected {
-			border-color: #00FF00;
-			background: #2a3a2a;
-		}
+		min-width: 180px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
 	}
 
-	.group-name {
-		font-size: 1.5em;
+	.unit-name {
+		font-size: 1.3em;
 		color: #FFD700;
+	}
+
+	.unit-description {
+		color: #ccc;
+		font-size: 0.85em;
+		text-align: center;
 		margin-bottom: 10px;
 	}
 
-	.group-description {
-		color: #ccc;
-		margin-bottom: 15px;
-		font-size: 0.9em;
+	.unit-counter {
+		display: flex;
+		align-items: center;
+		gap: 10px;
 	}
 
-	.group-bonuses {
-		color: #90EE90;
-		font-size: 0.85em;
+	.count-button {
+		width: 30px;
+		height: 30px;
+		background: #444;
+		border: 2px solid #666;
+		color: #fff;
+		cursor: pointer;
+		font-size: 1.2em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		&:hover:not(:disabled) {
+			background: #555;
+			border-color: #FFD700;
+		}
+
+		&:disabled {
+			opacity: 0.3;
+			cursor: not-allowed;
+		}
 	}
 
-	.group-bonuses div {
-		margin: 5px 0;
+	.count-display {
+		font-size: 1.5em;
+		color: #FFD700;
+		min-width: 30px;
+		text-align: center;
 	}
 ` {
-	constructor(options) {
-		super(options);
-		this.selectedGroup = null;
-		this.playerName = '';
+	constructor(options = {}) {
+		super({
+			...options,
+			playerName: generateRandomName(),
+		});
+
+		this.playerName = this.options.playerName;
+		console.log('Generated player name:', this.playerName);
+
+		// Track count of each unit type
+		this.unitCounts = {
+			worker: 0,
+			warrior: 0,
+			archer: 0,
+			mage: 0,
+			healer: 0,
+		};
+	}
+
+	getTotalSelected() {
+		return Object.values(this.unitCounts).reduce((sum, count) => sum + count, 0);
 	}
 
 	render() {
 		super.render();
 
+		console.log('Render called, playerName is:', this.playerName);
+
+		// If playerName isn't set yet (because super() triggered render before constructor finished),
+		// use the options value
+		if (!this.playerName && this.options.playerName) {
+			this.playerName = this.options.playerName;
+			console.log('Set playerName from options:', this.playerName);
+		}
+
 		new Elem({
 			appendTo: this,
 			tag: 'h1',
-			textContent: 'Choose Your Starting Group',
+			textContent: 'Choose Your Starting Party',
 		});
 
 		new Elem({
 			appendTo: this,
 			className: 'subtitle',
-			textContent: 'Your choice determines your initial infrastructure and bonuses',
+			textContent: `Select ${MAX_UNITS} individuals to begin your journey`,
 		});
+
+		console.log('About to create Input with playerName:', this.playerName);
 
 		this.nameInput = new Input({
 			appendTo: this,
 			className: 'player-name-input',
 			label: 'Your Name',
-			value: this.playerName,
+			placeholder: this.playerName || 'Enter name',
 			onChange: ({ value }) => {
 				this.playerName = value;
 				this.updateButton();
 			},
 		});
 
-		this.groupsContainer = new Elem({
+		// Set the input value after DOM is ready
+		requestAnimationFrame(() => {
+			const inputElem = this.nameInput.elem?.querySelector('input');
+			if (inputElem) {
+				inputElem.value = this.playerName;
+				console.log('Set input value to:', this.playerName);
+			} else {
+				console.error('Could not find input element');
+			}
+		});
+
+		this.counterDisplay = new Elem({
 			appendTo: this,
-			className: 'groups',
-			append: Object.values(STARTING_GROUPS).map((group) => this.createGroupCard(group)),
+			className: 'counter',
+			textContent: `Selected: 0 / ${MAX_UNITS}`,
+		});
+
+		this.unitsContainer = new Elem({
+			appendTo: this,
+			className: 'unit-classes',
+			append: BASE_CLASSES.map((unitType) => this.createUnitCard(unitType)),
 		});
 
 		this.confirmButton = new Button({
 			appendTo: this,
 			content: 'Begin Your Conquest',
-			disabled: !this.selectedGroup || !this.playerName,
+			disabled: true,
 			onPointerPress: () => this.confirmSelection(),
 		});
 	}
 
+	updateCounter() {
+		const total = this.getTotalSelected();
+		this.counterDisplay.elem.textContent = `Selected: ${total} / ${MAX_UNITS}`;
+
+		// Update button state
+		this.updateButton();
+	}
+
 	updateButton() {
 		if (this.confirmButton) {
-			this.confirmButton.elem.disabled = !this.selectedGroup || !this.playerName;
+			const isValid = this.getTotalSelected() === MAX_UNITS && this.playerName.trim().length > 0;
+			this.confirmButton.elem.disabled = !isValid;
 		}
 	}
 
-	createGroupCard(group) {
+	createUnitCard(unitType) {
+		const unitData = UNITS[unitType];
+
+		// Create count display first so we can reference it
+		const countDisplay = new Elem({
+			className: 'count-display',
+			textContent: '0',
+		});
+
 		const card = new Component({
-			className: `group-card ${this.selectedGroup === group.id ? 'selected' : ''}`,
+			className: 'unit-card',
 			append: [
 				new Elem({
-					className: 'group-name',
-					textContent: group.name,
+					className: 'unit-name',
+					textContent: unitData.name,
 				}),
 				new Elem({
-					className: 'group-description',
-					textContent: group.description,
+					className: 'unit-description',
+					textContent: unitData.description,
 				}),
-				new Elem({
-					className: 'group-bonuses',
-					append: group.bonuses.map((bonus) =>
-						new Elem({ textContent: `• ${bonus}` })
-					),
+				new Component({
+					className: 'unit-counter',
+					append: [
+						new Button({
+							className: 'count-button',
+							content: '-',
+							onPointerPress: () => {
+								if (this.unitCounts[unitType] > 0) {
+									this.unitCounts[unitType]--;
+									countDisplay.elem.textContent = this.unitCounts[unitType];
+									this.updateCounter();
+								}
+							},
+						}),
+						countDisplay,
+						new Button({
+							className: 'count-button',
+							content: '+',
+							onPointerPress: () => {
+								if (this.getTotalSelected() < MAX_UNITS) {
+									this.unitCounts[unitType]++;
+									countDisplay.elem.textContent = this.unitCounts[unitType];
+									this.updateCounter();
+								}
+							},
+						}),
+					],
 				}),
 			],
-			onPointerPress: () => {
-				// Remove selected class from all cards
-				this.groupsContainer.elem.querySelectorAll('.group-card').forEach(c => {
-					c.classList.remove('selected');
-				});
-
-				// Add selected class to this card
-				card.elem.classList.add('selected');
-
-				this.selectedGroup = group.id;
-				this.updateButton();
-			},
 		});
 
 		return card;
 	}
 
 	async confirmSelection() {
+		// Build starting units array
+		const startingUnits = [];
+		Object.entries(this.unitCounts).forEach(([unitType, count]) => {
+			for (let i = 0; i < count; i++) {
+				startingUnits.push({ type: unitType });
+			}
+		});
+
 		const createResult = await createGame({
 			body: {
 				name: `${this.playerName}'s Realm`,
-				startingGroup: this.selectedGroup,
+				startingUnits,
 			},
 		});
 
@@ -178,7 +300,7 @@ export default class StartingGroup extends styled.Component`
 			gameId,
 			body: {
 				playerName: this.playerName,
-				startingGroup: this.selectedGroup,
+				startingUnits,
 			},
 		});
 
@@ -190,7 +312,6 @@ export default class StartingGroup extends styled.Component`
 		// Store in sessionStorage to persist across navigation
 		sessionStorage.setItem('gameId', gameId);
 		sessionStorage.setItem('playerId', joinResult.body.playerId);
-		sessionStorage.setItem('serverState', JSON.stringify(joinResult.body.game));
 
 		// Navigate directly to game
 		window.location.href = `#/play/${gameId}`;

@@ -39,8 +39,8 @@ const gameRouter = async (request, server) => {
 			return Response.json({ error: 'Game not found' }, { status: 404 });
 		}
 
-		const { playerName, startingGroup } = await request.json();
-		const player = game.addPlayer(playerName, startingGroup);
+		const { playerName, startingUnits } = await request.json();
+		const player = game.addPlayer(playerName, startingUnits);
 
 		return Response.json({ playerId: player.id, game: game.toClient() }, { status: 201 });
 	}
@@ -126,6 +126,72 @@ const gameRouter = async (request, server) => {
 			buildingId: match.buildingId,
 			queue: building.productionQueue,
 		});
+
+		return new Response('OK');
+	}
+
+	// Assign task to unit (gather resource or build)
+	match = requestMatch('POST', '/api/games/:gameId/players/:playerId/units/:unitId/task', request);
+	if (match) {
+		const game = server.games[match.gameId];
+		if (!game) {
+			return Response.json({ error: 'Game not found' }, { status: 404 });
+		}
+
+		const unit = game.units.get(match.unitId);
+		if (!unit || unit.playerId !== match.playerId) {
+			return Response.json({ error: 'Unit not found' }, { status: 404 });
+		}
+
+		const { taskType, targetId } = await request.json();
+
+		// Validate task type
+		if (!['gather', 'build'].includes(taskType)) {
+			return Response.json({ error: 'Invalid task type' }, { status: 400 });
+		}
+
+		// Validate target exists
+		if (taskType === 'gather') {
+			const resource = game.resources.get(targetId);
+			if (!resource) {
+				return Response.json({ error: 'Resource not found' }, { status: 404 });
+			}
+
+			// Set unit to gathering status
+			unit.status = 'gathering';
+			unit.currentAction = {
+				targetId,
+				targetType: 'resource',
+				carrying: 0,
+			};
+		} else if (taskType === 'build') {
+			const building = game.buildings.get(targetId);
+			if (!building) {
+				return Response.json({ error: 'Building not found' }, { status: 404 });
+			}
+
+			// Find an unoccupied build position for this unit
+			const buildPosition = game.findBuildPositionForUnit(building, unit);
+			console.log(`[ASSIGN] Unit ${match.unitId} assigned build position:`, buildPosition, 'for building at:', building.position);
+			if (!buildPosition) {
+				return Response.json({ error: 'No available build position' }, { status: 400 });
+			}
+
+			// Set unit to building status with assigned position
+			unit.status = 'building';
+			unit.currentAction = {
+				targetId,
+				targetType: 'building',
+				buildPosition, // Store the assigned position
+			};
+		}
+
+		game.broadcast('unitTaskAssigned', {
+			unitId: match.unitId,
+			status: unit.status,
+			currentAction: unit.currentAction,
+		});
+		game.save();
 
 		return new Response('OK');
 	}

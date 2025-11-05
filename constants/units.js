@@ -18,9 +18,9 @@ export const UNITS = {
 		attackSpeed: 2.0, // attacks per second
 		attackRange: 1, // tiles
 		visionRange: 4, // tiles
-		carryCapacity: 10,
-		gatherRate: 5, // resources per second
-		buildSpeed: 1.0, // build progress per second
+		carryCapacity: 20, // 2x other units
+		gatherRate: 10, // 2x faster than other units
+		buildSpeed: 2.0, // 2x faster than other units
 		populationCost: 1,
 	},
 	warrior: {
@@ -42,6 +42,9 @@ export const UNITS = {
 		attackSpeed: 1.0, // attacks per second
 		attackRange: 1, // tiles (melee)
 		visionRange: 5, // tiles
+		carryCapacity: 10, // Half of worker
+		gatherRate: 5, // Half of worker
+		buildSpeed: 1.0, // Half of worker
 		populationCost: 1,
 	},
 	archer: {
@@ -63,6 +66,9 @@ export const UNITS = {
 		attackSpeed: 0.8, // attacks per second
 		attackRange: 5, // tiles (ranged)
 		visionRange: 7, // tiles
+		carryCapacity: 10,
+		gatherRate: 5,
+		buildSpeed: 1.0,
 		populationCost: 1,
 	},
 	mage: {
@@ -85,6 +91,9 @@ export const UNITS = {
 		attackSpeed: 0.5, // attacks per second (slow but powerful)
 		attackRange: 6, // tiles (long range)
 		visionRange: 6, // tiles
+		carryCapacity: 10,
+		gatherRate: 5,
+		buildSpeed: 1.0,
 		populationCost: 2, // Takes up 2 population
 		splashDamage: true, // Deals damage in area
 		splashRadius: 1,
@@ -108,6 +117,9 @@ export const UNITS = {
 		attackDamage: 0, // Cannot attack
 		attackSpeed: 0,
 		attackRange: 0,
+		carryCapacity: 10,
+		gatherRate: 5,
+		buildSpeed: 1.0,
 		visionRange: 5,
 		populationCost: 2,
 		healingRate: 20, // HP per second (powerful)

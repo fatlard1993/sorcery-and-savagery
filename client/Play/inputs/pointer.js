@@ -1,9 +1,19 @@
 import { throttle } from '../../../utils/index.js';
-import { pxToGridPosition, findPath } from '../../../utils/index.js';
-import { moveUnit } from '../../api/game.js';
+import { pxToGridPosition, gridToPxPosition, findPath } from '../../../utils/index.js';
+import { moveUnit, assignTask, placeBuilding } from '../../api/game.js';
 import gameContext from '../../shared/gameContext.js';
+import RadialMenu from '../RadialMenu.js';
+import BuildingMenu from '../BuildingMenu.js';
+import { BUILDINGS } from '../../../constants/index.js';
 
 export const onPointerDown = (pointer) => {
+	// Ignore if a menu button is being clicked
+	if (gameContext.menuButtonClicked) {
+		console.log('Menu button clicked, ignoring onPointerDown');
+		return;
+	}
+
+	// Left-click handling
 	const worldPoint = gameContext.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
 	console.log('Pointer down at world:', worldPoint);
 
@@ -21,20 +31,39 @@ export const onPointerDown = (pointer) => {
 	console.log('Clicked unit:', clickedUnit?.unitId);
 
 	if (clickedUnit) {
-		// Select unit
-		const unitsLayer = gameContext.sceneLayers.units;
+		// Set flag to prevent action menu from opening on unit selection
+		gameContext.justSelectedUnit = true;
 
-		if (!pointer.shiftKey) {
-			// Clear previous selection if not shift-clicking
-			gameContext.selectedUnits.forEach((unitId) => {
-				const unit = unitsLayer.list.find((obj) => obj.unitId === unitId);
-				if (unit) unit.setSelected(false);
-			});
-			gameContext.selectedUnits.clear();
+		const isAlreadySelected = gameContext.selectedUnits.has(clickedUnit.unitId);
+		const shiftHeld = gameContext.scene.input.keyboard.addKey('SHIFT').isDown;
+		console.log('Unit clicked:', clickedUnit.unitId, 'already selected:', isAlreadySelected, 'shift:', shiftHeld);
+
+		if (shiftHeld) {
+			// Shift-clicking: toggle selection without clearing others
+			if (isAlreadySelected) {
+				gameContext.selectedUnits.delete(clickedUnit.unitId);
+				clickedUnit.setSelected(false);
+			} else {
+				gameContext.selectedUnits.add(clickedUnit.unitId);
+				clickedUnit.setSelected(true);
+			}
+		} else {
+			// Normal click
+			if (isAlreadySelected) {
+				// Clicking a selected unit - deselect it
+				gameContext.selectedUnits.delete(clickedUnit.unitId);
+				clickedUnit.setSelected(false);
+			} else {
+				// Clicking an unselected unit - clear others and select this one
+				gameContext.selectedUnits.forEach((unitId) => {
+					const unit = unitsLayer.list.find((obj) => obj.unitId === unitId);
+					if (unit) unit.setSelected(false);
+				});
+				gameContext.selectedUnits.clear();
+				gameContext.selectedUnits.add(clickedUnit.unitId);
+				clickedUnit.setSelected(true);
+			}
 		}
-
-		gameContext.selectedUnits.add(clickedUnit.unitId);
-		clickedUnit.setSelected(true);
 		return;
 	}
 
@@ -60,23 +89,96 @@ export const onPointerDown = (pointer) => {
 };
 
 export const onPointerMove = throttle((pointer) => {
-	if (!gameContext.isSelecting) return;
-
 	const worldPoint = gameContext.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
-	const start = gameContext.selectionStart;
 
-	const width = worldPoint.x - start.x;
-	const height = worldPoint.y - start.y;
+	// Handle building placement ghost
+	if (gameContext.placingBuilding && gameContext.buildingGhost) {
+		const gridPos = pxToGridPosition({ x: worldPoint.x, y: worldPoint.y });
 
-	gameContext.selectionRect.setSize(width, height);
+		// Use same positioning logic as Building.js (gridToPxPosition)
+		const pos = gridToPxPosition(gridPos);
+		gameContext.buildingGhost.setPosition(pos.x, pos.y);
+
+		// Check if placement is valid (all tiles buildable and no overlaps)
+		const buildingData = BUILDINGS[gameContext.placingBuilding.type];
+		let isValid = true;
+
+		// Check all tiles the building would occupy
+		for (let bx = 0; bx < buildingData.size.width && isValid; bx++) {
+			for (let by = 0; by < buildingData.size.height && isValid; by++) {
+				const checkPos = { x: gridPos.x + bx, y: gridPos.y + by };
+
+				// Check if position exists
+				const terrain = gameContext.serverState.world.terrain.find(t => t.x === checkPos.x && t.y === checkPos.y);
+				if (!terrain) {
+					isValid = false;
+					break;
+				}
+
+				// Check if terrain is buildable (not water)
+				if (terrain.type === 'water') {
+					isValid = false;
+					break;
+				}
+
+				// Check for existing buildings
+				for (const building of gameContext.buildings.values()) {
+					const buildingStats = BUILDINGS[building.type];
+					for (let obx = 0; obx < buildingStats.size.width; obx++) {
+						for (let oby = 0; oby < buildingStats.size.height; oby++) {
+							if (building.position.x + obx === checkPos.x && building.position.y + oby === checkPos.y) {
+								isValid = false;
+								break;
+							}
+						}
+					}
+				}
+
+				// Check for resources
+				for (const resource of gameContext.serverState.world.resources) {
+					const size = resource.size || { width: 1, height: 1 };
+					for (let rx = 0; rx < size.width; rx++) {
+						for (let ry = 0; ry < size.height; ry++) {
+							if (resource.position.x + rx === checkPos.x && resource.position.y + ry === checkPos.y) {
+								isValid = false;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Update ghost color based on validity
+		const color = isValid ? 0x00ff00 : 0xff0000;
+		gameContext.buildingGhost.setFillStyle(color, 0.3);
+		gameContext.buildingGhost.setStrokeStyle(2, color);
+	}
+
+	// Handle selection rectangle
+	if (gameContext.isSelecting) {
+		const start = gameContext.selectionStart;
+		const width = worldPoint.x - start.x;
+		const height = worldPoint.y - start.y;
+		gameContext.selectionRect.setSize(width, height);
+	}
 }, 16);
 
 export const onPointerUp = async (pointer) => {
+	// Ignore if a menu button was just clicked
+	if (gameContext.menuButtonClicked) {
+		console.log('Menu button clicked, ignoring onPointerUp');
+		return;
+	}
+
 	const worldPoint = gameContext.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
 	const gridPos = pxToGridPosition({ x: worldPoint.x, y: worldPoint.y });
 
+	console.log('Pointer up at world:', worldPoint, 'grid:', gridPos, 'selectedUnits:', gameContext.selectedUnits.size);
+
 	// Handle selection rectangle completion
 	if (gameContext.isSelecting) {
+		console.log('Was selecting, bounds:', gameContext.selectionRect.getBounds());
 		gameContext.isSelecting = false;
 		gameContext.selectionRect.setVisible(false);
 
@@ -84,11 +186,13 @@ export const onPointerUp = async (pointer) => {
 		const bounds = gameContext.selectionRect.getBounds();
 		const wasDrag = Math.abs(bounds.width) > 5 || Math.abs(bounds.height) > 5;
 
+		console.log('wasDrag:', wasDrag);
+
 		if (wasDrag) {
 			// Box select units
 			const unitsLayer = gameContext.sceneLayers.units;
 
-			if (!pointer.shiftKey) {
+			if (!gameContext.scene.input.keyboard.addKey('SHIFT').isDown) {
 				// Clear previous selection before box selecting
 				gameContext.selectedUnits.forEach((unitId) => {
 					const unit = unitsLayer.list.find((obj) => obj.unitId === unitId);
@@ -100,7 +204,14 @@ export const onPointerUp = async (pointer) => {
 			unitsLayer.list.forEach((obj) => {
 				if (obj.unitId && obj.unitData.playerId === gameContext.playerId) {
 					const objBounds = obj.getBounds();
-					if (bounds.contains(objBounds.x, objBounds.y)) {
+					// Check if unit bounds overlap with selection bounds (not just center point)
+					const overlaps = !(
+						objBounds.right < bounds.left ||
+						objBounds.left > bounds.right ||
+						objBounds.bottom < bounds.top ||
+						objBounds.top > bounds.bottom
+					);
+					if (overlaps) {
 						gameContext.selectedUnits.add(obj.unitId);
 						obj.setSelected(true);
 					}
@@ -111,67 +222,280 @@ export const onPointerUp = async (pointer) => {
 		}
 		// Else: was just a click (not a drag)
 		// If no units selected, clear selection now
-		if (!pointer.shiftKey && gameContext.selectedUnits.size === 0) {
+		if (!gameContext.scene.input.keyboard.addKey('SHIFT').isDown && gameContext.selectedUnits.size === 0) {
+			console.log('Simple click with no units selected - doing nothing');
 			// Was a simple click with nothing selected - do nothing
 			return;
 		}
+		console.log('Falling through to move command, units selected:', gameContext.selectedUnits.size);
 		// Else: fall through to move command
 	}
 
-	// Move command with selected units
-	if (gameContext.selectedUnits.size > 0) {
-		console.log('Move command - selected units:', gameContext.selectedUnits.size, 'destination:', gridPos);
-		console.log('Game context:', { gameId: gameContext.gameId, playerId: gameContext.playerId });
+	console.log('Checking for radial menu...');
 
-		// Spread units around destination in a formation
-		const units = Array.from(gameContext.selectedUnits);
-		const formationOffsets = [
-			{x: 0, y: 0},
-			{x: -1, y: 0}, {x: 1, y: 0},
-			{x: 0, y: -1}, {x: 0, y: 1},
-			{x: -1, y: -1}, {x: 1, y: -1},
-			{x: -1, y: 1}, {x: 1, y: 1},
-		];
+	// Close existing radial menu if open
+	if (gameContext.activeRadialMenu) {
+		console.log('Closing existing radial menu');
 
-		// Move all selected units
-		for (let i = 0; i < units.length; i++) {
-			const unitId = units[i];
-			const unit = gameContext.units.get(unitId);
+		gameContext.activeRadialMenu.destroy();
+		gameContext.activeRadialMenu = null;
+		return; // Don't process this click further
+	}
 
-			if (unit && unit.playerId === gameContext.playerId) {
-				// Apply formation offset
-				const offset = formationOffsets[i % formationOffsets.length];
-				const destination = {
-					x: gridPos.x + offset.x,
-					y: gridPos.y + offset.y,
-				};
+	// Handle building placement mode
+	if (gameContext.placingBuilding) {
+		console.log('Placing building:', gameContext.placingBuilding.type, 'at', gridPos);
 
-				console.log(`Unit ${unitId} current position:`, unit.position, 'moving to:', destination);
+		try {
+			const result = await placeBuilding({
+				buildingType: gameContext.placingBuilding.type,
+				position: gridPos,
+			});
+			console.log('Building placed successfully, ID:', result.body.buildingId);
 
-				// Calculate path from unit's current position
-				const path = findPath(unit.position, destination, (pos) => {
-					// Simple walkability check (no buildings)
-					return true; // TODO: Add proper collision
-				});
-
-				console.log('Calculated path:', path);
-
-				if (path.length > 0) {
-					// Send move command to server
-					console.log('About to call moveUnit with:', { unitId, pathLength: path.length, gameId: gameContext.gameId, playerId: gameContext.playerId });
+			// Auto-assign selected units to construction
+			if (gameContext.selectedUnits.size > 0) {
+				console.log('Auto-assigning', gameContext.selectedUnits.size, 'units to construction');
+				for (const unitId of gameContext.selectedUnits) {
 					try {
-						const result = await moveUnit({ unitId, path });
-						console.log('Move command succeeded for', unitId, 'result:', result);
+						await assignTask({
+							unitId,
+							taskType: 'build',
+							targetId: result.body.buildingId,
+						});
+						console.log('Assigned unit', unitId, 'to build');
 					} catch (err) {
-						console.error('Move command error for', unitId, ':', err);
+						console.error('Failed to assign unit to build:', err);
 					}
-				} else {
-					console.log('No path found for unit', unitId);
 				}
+			}
+		} catch (err) {
+			console.error('Failed to place building:', err);
+		}
+
+		// Exit placement mode and destroy ghost
+		gameContext.placingBuilding = null;
+		if (gameContext.buildingGhost) {
+			gameContext.buildingGhost.destroy();
+			gameContext.buildingGhost = null;
+		}
+		return;
+	}
+
+	console.log('Checking for actions, selectedUnits:', gameContext.selectedUnits.size);
+
+	// Don't open action menu if we just selected a unit
+	if (gameContext.justSelectedUnit) {
+		console.log('Just selected unit, not opening action menu');
+		gameContext.justSelectedUnit = false;
+		return;
+	}
+
+	// Check if clicked on something that has multiple actions
+	if (gameContext.selectedUnits.size > 0) {
+		console.log('Building available actions...');
+		const availableActions = [];
+
+		// Check if clicked on a resource
+		const resourcesLayer = gameContext.sceneLayers.resources;
+		const clickedResource = resourcesLayer.list.find(
+			(obj) => obj.resourceId && obj.getBounds().contains(worldPoint.x, worldPoint.y)
+		);
+
+		if (clickedResource) {
+			availableActions.push({
+				label: 'Gather',
+				onSelect: () => {
+					console.log('Gather action selected, assigning to units:', gameContext.selectedUnits);
+					gameContext.selectedUnits.forEach(async (unitId) => {
+						try {
+							console.log('Assigning gather task to unit:', unitId, 'resource:', clickedResource.resourceId);
+							await assignTask({
+								unitId,
+								taskType: 'gather',
+								targetId: clickedResource.resourceId,
+							});
+							console.log('Gather task assigned successfully');
+						} catch (err) {
+							console.error(`Failed to assign gather task:`, err);
+						}
+					});
+				},
+			});
+		}
+
+		// Check if clicked on a building
+		const buildingsLayer = gameContext.sceneLayers.buildings;
+		const clickedBuilding = buildingsLayer.list.find(
+			(obj) => obj.buildingId && obj.getBounds().contains(worldPoint.x, worldPoint.y)
+		);
+
+		if (clickedBuilding) {
+			const building = gameContext.buildings.get(clickedBuilding.buildingId);
+			// Only show build option if building is under construction
+			if (building && building.constructionProgress < 1.0) {
+				availableActions.push({
+					label: 'Build',
+					onSelect: () => {
+						console.log('Build action selected, assigning to units:', gameContext.selectedUnits);
+						gameContext.selectedUnits.forEach(async (unitId) => {
+							try {
+								console.log('Assigning build task to unit:', unitId, 'building:', clickedBuilding.buildingId);
+								await assignTask({
+									unitId,
+									taskType: 'build',
+									targetId: clickedBuilding.buildingId,
+								});
+								console.log('Build task assigned successfully');
+							} catch (err) {
+								console.error(`Failed to assign build task:`, err);
+							}
+						});
+					},
+				});
 			}
 		}
 
-		// Don't clear selection after moving - user might want to move again
-		console.log('Movement commands sent, selection preserved');
+		// Add Build option if clicking on empty ground
+		if (!clickedResource && !clickedBuilding) {
+			availableActions.push({
+				label: 'Build',
+				onSelect: () => {
+					// Open building selection menu
+					gameContext.activeBuildingMenu = new BuildingMenu({
+						appendTo: document.body,
+						onSelect: async (buildingType) => {
+							// Enter building placement mode
+							gameContext.placingBuilding = {
+								type: buildingType,
+								position: gridPos,
+							};
+
+							// Create placement ghost
+							const buildingData = BUILDINGS[buildingType];
+							const size = buildingData.size;
+							const tileSize = 32;
+
+							gameContext.buildingGhost = gameContext.scene.add.rectangle(
+								0,
+								0,
+								size.width * tileSize,
+								size.height * tileSize,
+								0x00ff00,
+								0.3
+							);
+							gameContext.buildingGhost.setStrokeStyle(2, 0x00ff00);
+							gameContext.buildingGhost.setDepth(999);
+
+							console.log('Building placement mode activated:', buildingType);
+						},
+					});
+				},
+			});
+		}
+
+		// Always include Move as an option
+		availableActions.push({
+			label: 'Move',
+			onSelect: () => {
+				executeMove(gridPos);
+			},
+		});
+
+		console.log('Available actions count:', availableActions.length);
+
+		// Show radial menu if multiple actions available
+		if (availableActions.length > 1) {
+			console.log('Showing radial menu with', availableActions.length, 'actions');
+			gameContext.activeRadialMenu = new RadialMenu(gameContext.scene, worldPoint.x, worldPoint.y, availableActions);
+			return;
+		}
+
+		// If only one action (Move), execute it directly
+		console.log('Executing move directly');
+		executeMove(gridPos);
 	}
 };
+
+// Extract move logic into a helper function
+/**
+ *
+ * @param gridPos
+ */
+async function executeMove(gridPos) {
+	// Spread units around destination in a formation
+	const units = Array.from(gameContext.selectedUnits);
+	const formationOffsets = [
+		{x: 0, y: 0},
+		{x: -1, y: 0}, {x: 1, y: 0},
+		{x: 0, y: -1}, {x: 0, y: 1},
+		{x: -1, y: -1}, {x: 1, y: -1},
+		{x: -1, y: 1}, {x: 1, y: 1},
+	];
+
+	// Move all selected units
+	for (let i = 0; i < units.length; i++) {
+		const unitId = units[i];
+		const unit = gameContext.units.get(unitId);
+
+		if (unit && unit.playerId === gameContext.playerId) {
+			// Apply formation offset
+			const offset = formationOffsets[i % formationOffsets.length];
+			const destination = {
+				x: gridPos.x + offset.x,
+				y: gridPos.y + offset.y,
+			};
+
+			// Calculate path from unit's current position
+			const path = findPath(unit.position, destination, (pos) => {
+				// Check if position is on walkable terrain
+				const terrain = gameContext.serverState.world.terrain.find(t => t.x === pos.x && t.y === pos.y);
+				if (!terrain) return false;
+
+				// Check terrain type walkability (blocks water)
+				const terrainType = terrain.type;
+				if (terrainType === 'water') return false;
+
+				// Check for water/stone resources (check all tiles they occupy)
+				for (const resource of gameContext.serverState.world.resources) {
+					if (resource.resourceType === 'water' || resource.resourceType === 'stone') {
+						const size = resource.size || { width: 1, height: 1 };
+						for (let rx = 0; rx < size.width; rx++) {
+							for (let ry = 0; ry < size.height; ry++) {
+								if (resource.position.x + rx === pos.x && resource.position.y + ry === pos.y) {
+									return false;
+								}
+							}
+						}
+					}
+				}
+
+				// Check for buildings
+				for (const building of gameContext.buildings.values()) {
+					const buildingData = BUILDINGS[building.type];
+					if (!buildingData) continue;
+
+					// Check if position overlaps building
+					for (let bx = 0; bx < buildingData.size.width; bx++) {
+						for (let by = 0; by < buildingData.size.height; by++) {
+							if (building.position.x + bx === pos.x && building.position.y + by === pos.y) {
+								return false;
+							}
+						}
+					}
+				}
+
+				return true;
+			});
+
+			if (path.length > 0) {
+				// Send move command to server
+				try {
+					await moveUnit({ unitId, path });
+				} catch (err) {
+					console.error('Move command error for', unitId, ':', err);
+				}
+			}
+		}
+	}
+}

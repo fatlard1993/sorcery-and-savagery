@@ -45,6 +45,11 @@ export default class Game extends BaseGame {
 			saveState.resources.forEach((resource) => {
 				this.resources.set(resource.id, resource);
 			});
+		} else if (this.world.resources) {
+			// Initialize resources from freshly generated world
+			this.world.resources.forEach((resource) => {
+				this.resources.set(resource.id, resource);
+			});
 		}
 
 		// Start game loop
@@ -59,11 +64,15 @@ export default class Game extends BaseGame {
 	startGameLoop() {
 		console.log('[GAME] Game loop started, tick rate:', this.tickRate);
 		this.gameLoop = setInterval(() => {
-			const now = Date.now();
-			const deltaTime = (now - this.lastTick) / 1000;
-			this.gameTick(deltaTime);
-			this.lastTick = now;
-			this.tick++;
+			try {
+				const now = Date.now();
+				const deltaTime = (now - this.lastTick) / 1000;
+				this.gameTick(deltaTime);
+				this.lastTick = now;
+				this.tick++;
+			} catch (error) {
+				console.error('[GAME] Error in game loop:', error);
+			}
 		}, this.tickInterval);
 	}
 
@@ -77,7 +86,7 @@ export default class Game extends BaseGame {
 	gameTick(deltaTime) {
 		// Debug log every second
 		if (this.tick % 60 === 0) {
-			console.log(`[GAME] gameTick called, tick=${this.tick}, units=${this.units.size}`);
+			console.log(`[TICK] tick=${this.tick}, units=${this.units.size}`);
 		}
 
 		// Update all units
@@ -125,9 +134,41 @@ export default class Game extends BaseGame {
 
 		if (!unit.path || unit.path.length === 0) {
 			if (unit.status === 'moving') {
-				console.log(`[GAME] Unit ${unit.id} - Movement complete, going idle at`, unit.position);
+				console.log(`[GAME] Unit ${unit.id} - Movement complete at`, unit.position);
+
+				// Check if unit has a task to resume after moving
+				if (unit.currentAction) {
+					if (unit.currentAction.targetType === 'resource') {
+						// Check if returning to town center or going to resource
+						if (unit.currentAction.returning) {
+							// Just arrived at town center - call returnResources to deposit and path back
+							delete unit.currentAction.returning;
+							this.returnResources(unit);
+							return;
+						} else {
+							// Arrived at resource - start gathering
+							unit.status = 'gathering';
+							this.broadcast('unitMoved', {
+								unitId: unit.id,
+								position: unit.position,
+								status: 'gathering',
+							});
+							return;
+						}
+					} else if (unit.currentAction.targetType === 'building') {
+						// Arrived at building - start building
+						unit.status = 'building';
+						this.broadcast('unitMoved', {
+							unitId: unit.id,
+							position: unit.position,
+							status: 'building',
+						});
+						return;
+					}
+				}
+
+				// No task - go idle
 				unit.status = 'idle';
-				// Only broadcast when transitioning to idle
 				this.broadcast('unitMoved', {
 					unitId: unit.id,
 					position: unit.position,
@@ -166,18 +207,9 @@ export default class Game extends BaseGame {
 			// Update spatial grid
 			this.unitSpatialGrid.update(unit);
 
-			// Broadcast position update for every waypoint
-			if (unit.path.length === 0) {
-				// Path complete - unit now idle
-				console.log(`[GAME] Unit ${unit.id} - Reached final destination`, unit.position);
-				unit.status = 'idle';
-				this.broadcast('unitMoved', {
-					unitId: unit.id,
-					position: unit.position,
-					status: 'idle',
-				});
-			} else {
-				// Still moving - broadcast intermediate position
+			// Only broadcast intermediate waypoints, not the final one
+			// (final destination is handled at the top of this function)
+			if (unit.path.length > 0) {
 				this.broadcast('unitMoved', {
 					unitId: unit.id,
 					position: unit.position,
@@ -196,15 +228,41 @@ export default class Game extends BaseGame {
 		const resource = this.resources.get(unit.currentAction?.targetId);
 
 		if (!resource || resource.amount <= 0) {
+			console.log(`[GATHER] Unit ${unit.id} - Resource not found or depleted`);
 			unit.status = 'idle';
 			unit.currentAction = null;
 			return;
 		}
 
+		// Check if unit is at the resource location
+		const distance = gridDistance(unit.position, resource.position);
+		if (distance > 1) {
+			// Not at resource yet - move to it
+			console.log(`[GATHER] Unit ${unit.id} - Distance ${distance} to resource at`, resource.position, '- pathfinding...');
+			const path = findPath(unit.position, resource.position, (pos) => this.isWalkable(pos));
+			if (path.length > 0) {
+				console.log(`[GATHER] Unit ${unit.id} - Path found, length ${path.length}, moving to resource`);
+				unit.path = path;
+				unit.status = 'moving';
+				// Keep currentAction so we know to gather when we arrive
+			} else {
+				console.log(`[GATHER] Unit ${unit.id} - No path to resource!`);
+				// No path to resource
+				unit.status = 'idle';
+				unit.currentAction = null;
+			}
+			return;
+		}
+
+		// At resource - gather
+		if (this.tick % 60 === 0) {
+			console.log(`[GATHER] Unit ${unit.id} - At resource, gathering...`);
+		}
+
 		const unitStats = UNITS[unit.type];
 		const player = this.players.get(unit.playerId);
-		const startingGroup = STARTING_GROUPS[player.startingGroup];
-		const bonus = startingGroup.gatheringBonuses[resource.resourceType] || 1.0;
+		// No gathering bonuses anymore since we removed starting groups
+		const bonus = 1.0;
 
 		const gatherRate = resource.gatherRate * bonus;
 		const amountGathered = Math.min(gatherRate * deltaTime, resource.amount);
@@ -228,39 +286,151 @@ export default class Game extends BaseGame {
 
 	returnResources(unit) {
 		const player = this.players.get(unit.playerId);
-		const resourceType = this.resources.get(unit.currentAction.targetId).resourceType;
 
-		// Add to player resources
-		player.resources[resourceType] += unit.currentAction.carrying;
+		// Find player's town center (or any building for drop-off)
+		let townCenter = null;
+		for (const building of this.buildings.values()) {
+			if (building.playerId === unit.playerId && building.type === 'townCenter' && building.constructionProgress >= 1.0) {
+				townCenter = building;
+				break;
+			}
+		}
 
-		// Broadcast resource update
-		this.broadcast('playerResourcesUpdated', {
-			playerId: player.id,
-			resources: player.resources,
-		});
+		// If no town center, find any completed building
+		if (!townCenter) {
+			for (const building of this.buildings.values()) {
+				if (building.playerId === unit.playerId && building.constructionProgress >= 1.0) {
+					townCenter = building;
+					break;
+				}
+			}
+		}
 
-		// Reset carrying
-		unit.currentAction.carrying = 0;
+		if (!townCenter) {
+			// No drop-off point - just add resources immediately and go idle
+			const resourceType = this.resources.get(unit.currentAction.targetId).resourceType;
+			player.resources[resourceType] += unit.currentAction.carrying;
 
-		// TODO: Path back to resource to continue gathering
-		unit.status = 'idle';
-		unit.currentAction = null;
-	}
+			this.broadcast('playerResourcesUpdated', {
+				playerId: player.id,
+				resources: player.resources,
+			});
 
-	constructBuilding(unit, deltaTime) {
-		const building = this.buildings.get(unit.currentAction?.targetId);
-
-		if (!building || building.constructionProgress >= 1.0) {
 			unit.status = 'idle';
 			unit.currentAction = null;
 			return;
 		}
 
-		const unitStats = UNITS[unit.type];
+		// Check if already at town center
+		const distance = gridDistance(unit.position, townCenter.position);
+		if (distance <= 2) {
+			// At town center - deposit resources
+			const resourceType = this.resources.get(unit.currentAction.targetId).resourceType;
+			player.resources[resourceType] += unit.currentAction.carrying;
+
+			this.broadcast('playerResourcesUpdated', {
+				playerId: player.id,
+				resources: player.resources,
+			});
+
+			// Reset carrying
+			unit.currentAction.carrying = 0;
+
+			// Path back to resource to continue gathering
+			const resource = this.resources.get(unit.currentAction.targetId);
+			if (resource && resource.amount > 0) {
+				const path = findPath(unit.position, resource.position, (pos) => this.isWalkable(pos));
+				if (path.length > 0) {
+					unit.path = path;
+					unit.status = 'moving';
+					// Keep currentAction with targetId so unit continues gathering after arriving
+				} else {
+					// No path back to resource
+					unit.status = 'idle';
+					unit.currentAction = null;
+				}
+			} else {
+				// Resource depleted
+				unit.status = 'idle';
+				unit.currentAction = null;
+			}
+		} else {
+			// Not at town center yet - path to it
+			const path = findPath(unit.position, townCenter.position, (pos) => this.isWalkable(pos));
+			if (path.length > 0) {
+				unit.path = path;
+				unit.status = 'moving';
+				unit.currentAction.returning = true; // Flag to know we're returning
+			} else {
+				// No path to town center - just add resources and go idle
+				const resourceType = this.resources.get(unit.currentAction.targetId).resourceType;
+				player.resources[resourceType] += unit.currentAction.carrying;
+
+				this.broadcast('playerResourcesUpdated', {
+					playerId: player.id,
+					resources: player.resources,
+				});
+
+				unit.status = 'idle';
+				unit.currentAction = null;
+			}
+		}
+	}
+
+	constructBuilding(unit, deltaTime) {
+		const building = this.buildings.get(unit.currentAction?.targetId);
+
+		if (!building) {
+			console.log(`[BUILD] Unit ${unit.id} - Building not found:`, unit.currentAction?.targetId);
+			unit.status = 'idle';
+			unit.currentAction = null;
+			return;
+		}
+
+		if (building.constructionProgress >= 1.0) {
+			console.log(`[BUILD] Unit ${unit.id} - Building already complete`);
+			unit.status = 'idle';
+			unit.currentAction = null;
+			return;
+		}
+
+		// Check if unit is at the building location
+		const distance = gridDistance(unit.position, building.position);
 		const buildingStats = BUILDINGS[building.type];
+		const maxDistance = Math.max(buildingStats.size.width, buildingStats.size.height) + 1;
+
+		if (distance > maxDistance) {
+			// Not at building yet - move to assigned build position
+			console.log(`[BUILD] Unit ${unit.id} - Distance ${distance} to building, moving closer`);
+
+			const target = unit.currentAction.buildPosition;
+			if (!target) {
+				console.log(`[BUILD] Unit ${unit.id} - No build position assigned`);
+				unit.status = 'idle';
+				unit.currentAction = null;
+				return;
+			}
+
+			const path = findPath(unit.position, target, (pos) => this.isWalkable(pos));
+			if (path.length > 0) {
+				unit.path = path;
+				unit.status = 'moving';
+			} else {
+				console.log(`[BUILD] Unit ${unit.id} - No path to assigned position`);
+				unit.status = 'idle';
+				unit.currentAction = null;
+			}
+			return;
+		}
+
+		const unitStats = UNITS[unit.type];
 
 		const buildProgress = unitStats.buildSpeed * deltaTime / buildingStats.constructionTime;
 		building.constructionProgress = Math.min(1.0, building.constructionProgress + buildProgress);
+
+		if (this.tick % 60 === 0) {
+			console.log(`[BUILD] Unit ${unit.id} building ${building.id}, progress: ${(building.constructionProgress * 100).toFixed(1)}%`);
+		}
 
 		// Update every 10 ticks
 		if (this.tick % 10 === 0) {
@@ -531,9 +701,61 @@ export default class Game extends BaseGame {
 		}
 	}
 
+	findBuildPositionForUnit(building, unit) {
+		const buildingStats = BUILDINGS[building.type];
+		console.log(`[FINDPOS] Finding build position for unit ${unit.id} around building ${building.id} at`, building.position);
+
+		// Collect ALL adjacent walkable tiles around the building perimeter
+		const neighbors = [];
+		// Top edge
+		for (let x = building.position.x - 1; x <= building.position.x + buildingStats.size.width; x++) {
+			neighbors.push({ x, y: building.position.y - 1 });
+		}
+		// Bottom edge
+		for (let x = building.position.x - 1; x <= building.position.x + buildingStats.size.width; x++) {
+			neighbors.push({ x, y: building.position.y + buildingStats.size.height });
+		}
+		// Left edge (excluding corners already added)
+		for (let y = building.position.y; y < building.position.y + buildingStats.size.height; y++) {
+			neighbors.push({ x: building.position.x - 1, y });
+		}
+		// Right edge (excluding corners already added)
+		for (let y = building.position.y; y < building.position.y + buildingStats.size.height; y++) {
+			neighbors.push({ x: building.position.x + buildingStats.size.width, y });
+		}
+
+		// Find which adjacent tiles are already occupied or assigned
+		const occupiedTiles = new Set();
+		for (const otherUnit of this.units.values()) {
+			if (otherUnit.id !== unit.id &&
+				otherUnit.status === 'building' &&
+				otherUnit.currentAction?.targetId === building.id &&
+				otherUnit.currentAction?.buildPosition) {
+				// Unit has an assigned build position
+				const pos = otherUnit.currentAction.buildPosition;
+				console.log(`[FINDPOS] Unit ${otherUnit.id} already has position:`, pos);
+				occupiedTiles.add(`${pos.x},${pos.y}`);
+			}
+		}
+
+		// Try to find an unoccupied walkable tile
+		console.log(`[FINDPOS] Checking ${neighbors.length} neighbor tiles, ${occupiedTiles.size} already occupied`);
+		for (const target of neighbors) {
+			const tileKey = `${target.x},${target.y}`;
+			if (this.isWalkable(target) && !occupiedTiles.has(tileKey)) {
+				console.log(`[FINDPOS] Found available position:`, target);
+				return target;
+			}
+		}
+
+		console.log(`[FINDPOS] No available position found`);
+		return null; // No available position
+	}
+
 	checkWinConditions() {
-		// Check each player's buildings
+		// Check each player's buildings and units
 		const playerBuildingCounts = new Map();
+		const playerUnitCounts = new Map();
 
 		for (const building of this.buildings.values()) {
 			if (building.constructionProgress >= 1.0) {
@@ -544,35 +766,57 @@ export default class Game extends BaseGame {
 			}
 		}
 
-		// Find players with no buildings
+		for (const unit of this.units.values()) {
+			if (unit.health > 0) {
+				playerUnitCounts.set(
+					unit.playerId,
+					(playerUnitCounts.get(unit.playerId) || 0) + 1
+				);
+			}
+		}
+
+		// Find players with no buildings AND no units
+		const defeatedPlayers = new Set();
 		for (const player of this.players.values()) {
-			if (!playerBuildingCounts.has(player.id) || playerBuildingCounts.get(player.id) === 0) {
+			const hasBuildings = playerBuildingCounts.has(player.id) && playerBuildingCounts.get(player.id) > 0;
+			const hasUnits = playerUnitCounts.has(player.id) && playerUnitCounts.get(player.id) > 0;
+
+			if (!hasBuildings && !hasUnits) {
+				defeatedPlayers.add(player.id);
 				this.broadcast('playerDefeated', {
 					playerId: player.id,
 				});
-
-				// Check if only one player remains
-				if (playerBuildingCounts.size === 1) {
-					const winner = [...playerBuildingCounts.keys()][0];
-					this.broadcast('gameOver', {
-						winnerId: winner,
-					});
-					this.stopGameLoop();
-				}
 			}
+		}
+
+		// Check if only one player remains (has buildings or units)
+		const remainingPlayers = [...this.players.keys()].filter(id => !defeatedPlayers.has(id));
+		if (remainingPlayers.length === 1 && this.players.size > 1) {
+			this.broadcast('gameOver', {
+				winnerId: remainingPlayers[0],
+			});
+			this.stopGameLoop();
 		}
 	}
 
 	isWalkable(position) {
 		// Check terrain
 		const terrain = this.world.terrain.find((t) => t.x === position.x && t.y === position.y);
-		if (!terrain || !TERRAIN_TYPES[terrain.type].walkable) {
+		if (!terrain) {
 			return false;
 		}
 
-		// Check for buildings (simplified - just check position, not size)
+		const terrainType = TERRAIN_TYPES[terrain.type];
+		if (!terrainType || !terrainType.walkable) {
+			return false;
+		}
+
+		// Check for buildings
 		for (const building of this.buildings.values()) {
-			const cells = getCellsInRect(building.position, BUILDINGS[building.type].size);
+			const buildingStats = BUILDINGS[building.type];
+			if (!buildingStats) continue;
+
+			const cells = getCellsInRect(building.position, buildingStats.size);
 			if (cells.some((cell) => cell.x === position.x && cell.y === position.y)) {
 				return false;
 			}
@@ -606,9 +850,8 @@ export default class Game extends BaseGame {
 		return true;
 	}
 
-	addPlayer(name, startingGroup) {
+	addPlayer(name, startingUnits) {
 		const id = simpleId();
-		const startingData = STARTING_GROUPS[startingGroup];
 
 		// Find spawn location (simple: place players in corners)
 		const playerCount = this.players.size;
@@ -620,54 +863,59 @@ export default class Game extends BaseGame {
 		];
 		const spawnPos = spawnPositions[playerCount] || { x: 10, y: 10 };
 
+		// Calculate starting resources based on unit composition
+		// More workers = more starting resources, more combatants = less
+		const workerCount = startingUnits.filter(u => u.type === 'worker').length;
+		const resourceMultiplier = 1 + (workerCount * 0.15); // +15% per worker
+
 		const player = {
 			id,
 			name,
-			startingGroup,
-			resources: { ...startingData.startingResources },
-			population: { current: 0, max: 0 },
+			resources: {
+				wood: Math.floor(200 * resourceMultiplier),
+				stone: Math.floor(150 * resourceMultiplier),
+				iron: Math.floor(100 * resourceMultiplier),
+				water: Math.floor(100 * resourceMultiplier),
+				food: Math.floor(150 * resourceMultiplier),
+			},
+			population: { current: 0, max: 50 }, // Start with population cap of 50
 			techTree: {
 				level: 1,
-				unlocked: [...startingData.unlockedBuildings],
+				unlocked: ['house', 'barracks', 'archery_range', 'tower'],
 			},
 		};
 
 		this.players.set(id, player);
 
-		// Place starting buildings
-		startingData.buildings.forEach(({ type, position }, index) => {
-			const adjustedPos = {
-				x: spawnPos.x + position.x - 10,
-				y: spawnPos.y + position.y - 10,
-			};
-			const building = {
-				id: simpleId(),
-				type,
-				playerId: id,
-				position: adjustedPos,
-				size: BUILDINGS[type].size,
-				health: BUILDINGS[type].maxHealth,
-				maxHealth: BUILDINGS[type].maxHealth,
-				constructionProgress: 1.0, // Start buildings are complete
-				productionQueue: [],
-				rallyPoint: null,
-			};
-
-			this.buildings.set(building.id, building);
-			this.buildingSpatialGrid.add(building);
-
-			// Update population
-			if (BUILDINGS[type].populationProvided) {
-				player.population.max += BUILDINGS[type].populationProvided;
+		// No starting buildings - spawn units in walkable positions around spawn point
+		let spawnedCount = 0;
+		for (const unit of startingUnits) {
+			// Find walkable position in a spiral around spawn point
+			let foundPosition = false;
+			for (let radius = 0; radius < 10 && !foundPosition; radius++) {
+				for (let dx = -radius; dx <= radius && !foundPosition; dx++) {
+					for (let dy = -radius; dy <= radius && !foundPosition; dy++) {
+						if (Math.abs(dx) === radius || Math.abs(dy) === radius) {
+							const pos = { x: spawnPos.x + dx, y: spawnPos.y + dy };
+							if (this.isWalkable(pos)) {
+								// Check if not occupied by another just-spawned unit
+								let occupied = false;
+								for (const otherUnit of this.units.values()) {
+									if (otherUnit.position.x === pos.x && otherUnit.position.y === pos.y) {
+										occupied = true;
+										break;
+									}
+								}
+								if (!occupied) {
+									this.spawnUnit(unit.type, id, pos);
+									foundPosition = true;
+									spawnedCount++;
+								}
+							}
+						}
+					}
+				}
 			}
-		});
-
-		// Spawn starting workers
-		for (let i = 0; i < startingData.workers; i++) {
-			this.spawnUnit('worker', id, {
-				x: spawnPos.x + Math.floor(i / 3),
-				y: spawnPos.y + (i % 3),
-			});
 		}
 
 		this.broadcast('playerJoined', { player });
