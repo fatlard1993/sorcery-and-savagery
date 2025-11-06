@@ -92,6 +92,26 @@ export default function units(data) {
 				unit.status = data.status;
 				unit.currentAction = data.currentAction;
 				console.log(`Unit ${data.unitId} assigned task:`, data.status, data.currentAction);
+
+				// Update gathering progress bar on sprite
+				const sprite = unitsLayer.list.find((obj) => obj.unitId === data.unitId);
+				if (sprite && sprite.updateGatherProgress) {
+					sprite.updateGatherProgress();
+				}
+			}
+			break;
+		}
+
+		case 'unitGatherProgress': {
+			// Update gathering progress bar
+			const unit = gameContext.units.get(data.unitId);
+			if (unit && unit.currentAction) {
+				unit.currentAction.carrying = data.carrying;
+
+				const sprite = unitsLayer.list.find((obj) => obj.unitId === data.unitId);
+				if (sprite && sprite.updateGatherProgress) {
+					sprite.updateGatherProgress();
+				}
 			}
 			break;
 		}

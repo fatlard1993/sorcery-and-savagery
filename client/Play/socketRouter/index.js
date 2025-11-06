@@ -33,6 +33,7 @@ export default function socketRouter(data) {
 		case 'unitAttacked':
 		case 'unitDestroyed':
 		case 'unitTaskAssigned':
+		case 'unitGatherProgress':
 			units(data);
 			break;
 
@@ -48,10 +49,17 @@ export default function socketRouter(data) {
 
 		// Resource updates
 		case 'resourceUpdated':
-			const resource = gameContext.scene.children.list.find(
+			// Update resource data in gameContext
+			const resourceData = gameContext.resources.get(data.resourceId);
+			if (resourceData) {
+				resourceData.amount = data.amount;
+			}
+
+			// Update resource sprite
+			const resource = gameContext.sceneLayers.resources.list.find(
 				(obj) => obj.resourceId === data.resourceId
 			);
-			if (resource) {
+			if (resource && resource.updateAmount) {
 				resource.updateAmount(data.amount);
 			}
 			break;

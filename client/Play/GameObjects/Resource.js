@@ -36,29 +36,54 @@ export default class Resource extends Phaser.GameObjects.Container {
 		this.sprite.setDisplaySize(displaySize * scale, displaySize * scale);
 		this.add(this.sprite);
 
-		// Health bar background (starts hidden)
+		// Health bar background (always visible to show resource availability)
 		const barYOffset = -(displaySize / 2) - 7;
 		this.healthBarBg = scene.add.rectangle(0, barYOffset, displaySize, 6, 0x000000, 0.7);
-		this.healthBarBg.setVisible(false);
+		this.healthBarBg.setDepth(100);
 		this.add(this.healthBarBg);
 
-		// Health bar (starts hidden)
-		this.healthBar = scene.add.rectangle(0, barYOffset, displaySize, 6, 0x00ff00);
-		this.healthBar.setVisible(false);
+		// Health bar (always visible, shows remaining resources)
+		this.healthBar = scene.add.rectangle(-(displaySize/2), barYOffset, displaySize, 6, 0x00ff00);
+		this.healthBar.setOrigin(0, 0.5);
+		this.healthBar.setDepth(101);
 		this.add(this.healthBar);
 
-		// Health bar frame (starts hidden)
+		// Health bar frame (always visible)
 		this.healthBarFrame = scene.add.rectangle(0, barYOffset, displaySize, 6);
 		this.healthBarFrame.setStrokeStyle(1, 0xffffff, 0.8);
 		this.healthBarFrame.setFillStyle(0x000000, 0);
-		this.healthBarFrame.setVisible(false);
+		this.healthBarFrame.setDepth(102);
 		this.add(this.healthBarFrame);
+
+		// Depletion bar (orange, below health bar, shows while being gathered)
+		const depletionYOffset = barYOffset + 10;
+		this.depletionBarBg = scene.add.rectangle(0, depletionYOffset, displaySize, 4, 0x000000, 0.7);
+		this.depletionBarBg.setVisible(false);
+		this.add(this.depletionBarBg);
+
+		this.depletionBar = scene.add.rectangle(-(displaySize/2), depletionYOffset, 0, 4, 0xFF6600);
+		this.depletionBar.setOrigin(0, 0.5);
+		this.depletionBar.setVisible(false);
+		this.add(this.depletionBar);
+
+		this.depletionBarFrame = scene.add.rectangle(0, depletionYOffset, displaySize, 4);
+		this.depletionBarFrame.setStrokeStyle(1, 0xffffff, 0.8);
+		this.depletionBarFrame.setFillStyle(0x000000, 0);
+		this.depletionBarFrame.setVisible(false);
+		this.add(this.depletionBarFrame);
 
 		// Store displaySize for updateHealthBar
 		this.displaySize = displaySize;
+		this.isBeingGathered = false;
 
 		// Store in game context
 		gameContext.resources.set(resourceData.id, resourceData);
+
+		// Set initial health bar state
+		this.updateHealthBar();
+
+		// Set depth so health bars render above sprites
+		this.setDepth(10);
 
 		scene.add.existing(this);
 		gameContext.sceneLayers.resources.add(this);
@@ -71,19 +96,19 @@ export default class Resource extends Phaser.GameObjects.Container {
 
 		// Don't show health bar for infinite resources (water)
 		if (maxAmount === Infinity) {
+			this.healthBarBg.setVisible(false);
+			this.healthBar.setVisible(false);
+			this.healthBarFrame.setVisible(false);
 			return;
 		}
 
-		// Show health bar once gathering has started
-		if (!this.hasBeenGathered && currentAmount < maxAmount) {
-			this.hasBeenGathered = true;
-			this.healthBarBg.setVisible(true);
-			this.healthBar.setVisible(true);
-			this.healthBarFrame.setVisible(true);
-		}
+		// Show health bar unless at full capacity
+		const isFull = currentAmount >= maxAmount;
+		this.healthBarBg.setVisible(!isFull);
+		this.healthBar.setVisible(!isFull);
+		this.healthBarFrame.setVisible(!isFull);
 
-		// Update health bar width and color
-		if (this.hasBeenGathered) {
+		if (!isFull) {
 			const percentage = currentAmount / maxAmount;
 			this.healthBar.width = this.displaySize * percentage;
 

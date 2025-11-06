@@ -143,7 +143,7 @@ const gameRouter = async (request, server) => {
 			return Response.json({ error: 'Unit not found' }, { status: 404 });
 		}
 
-		const { taskType, targetId } = await request.json();
+		const { taskType, targetId, gatherType } = await request.json();
 
 		// Validate task type
 		if (!['gather', 'build'].includes(taskType)) {
@@ -163,6 +163,7 @@ const gameRouter = async (request, server) => {
 				targetId,
 				targetType: 'resource',
 				carrying: 0,
+				gatherType: gatherType || resource.resourceType, // Default to resource's type
 			};
 		} else if (taskType === 'build') {
 			const building = game.buildings.get(targetId);
@@ -194,6 +195,26 @@ const gameRouter = async (request, server) => {
 		game.save();
 
 		return new Response('OK');
+	}
+
+	// Choose spawn location
+	match = requestMatch('POST', '/api/games/:gameId/players/:playerId/spawn', request);
+	if (match) {
+		const game = server.games[match.gameId];
+		if (!game) {
+			return Response.json({ error: 'Game not found' }, { status: 404 });
+		}
+
+		const { position } = await request.json();
+		const result = game.spawnPlayerAtLocation(match.playerId, position);
+
+		if (!result.success) {
+			return Response.json({ error: result.error }, { status: 400 });
+		}
+
+		game.save();
+
+		return Response.json({ success: true });
 	}
 };
 

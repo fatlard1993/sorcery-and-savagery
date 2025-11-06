@@ -1,4 +1,24 @@
 export const BUILDINGS = {
+	campfire: {
+		id: 'campfire',
+		name: 'Campfire',
+		description: 'Starting structure. Establishes your base and serves as a drop-off point.',
+		sprite: 'campfire',
+		size: { width: 1, height: 1 },
+		cost: {
+			wood: 0,
+			stone: 0,
+			iron: 0,
+			food: 0,
+		},
+		constructionTime: 5, // seconds
+		health: 200,
+		maxHealth: 200,
+		produces: [],
+		isDropoff: true,
+		resourceTypes: ['wood', 'stone', 'food', 'water'],
+		populationProvided: 0,
+	},
 	town_center: {
 		id: 'town_center',
 		name: 'Town Center',

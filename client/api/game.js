@@ -48,10 +48,17 @@ export const produceUnit = async ({ buildingId, unitType }, options) =>
 		...options,
 	});
 
-export const assignTask = async ({ unitId, taskType, targetId }, options) =>
+export const assignTask = async ({ unitId, taskType, targetId, gatherType }, options) =>
 	await POST('/api/games/:gameId/players/:playerId/units/:unitId/task', {
 		urlParameters: { ...apiContext(), unitId },
-		body: { taskType, targetId },
+		body: { taskType, targetId, gatherType },
 		cache: false,
+		...options,
+	});
+
+export const chooseSpawnLocation = async ({ position }, options) =>
+	await POST('/api/games/:gameId/players/:playerId/spawn', {
+		urlParameters: apiContext(),
+		body: { position },
 		...options,
 	});

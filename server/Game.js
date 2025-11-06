@@ -261,25 +261,50 @@ export default class Game extends BaseGame {
 
 		const unitStats = UNITS[unit.type];
 		const player = this.players.get(unit.playerId);
-		// No gathering bonuses anymore since we removed starting groups
 		const bonus = 1.0;
 
-		const gatherRate = resource.gatherRate * bonus;
-		const amountGathered = Math.min(gatherRate * deltaTime, resource.amount);
+		// For forests, use different gather rates for food vs wood
+		const gatherType = unit.currentAction.gatherType || resource.resourceType;
+		let gatherRate;
 
-		resource.amount -= amountGathered;
-		unit.currentAction.carrying += amountGathered;
+		if (resource.type === 'forest') {
+			// Forest: food is unlimited (berries/game), wood depletes the resource
+			if (gatherType === 'food') {
+				gatherRate = RESOURCE_TYPES.forest.gatherRate * bonus;
+				// Food doesn't deplete forest, just gather
+				const amountGathered = gatherRate * deltaTime;
+				unit.currentAction.carrying += amountGathered;
+			} else {
+				// Chopping wood depletes the forest
+				gatherRate = RESOURCE_TYPES.forest.chopRate * bonus;
+				const amountGathered = Math.min(gatherRate * deltaTime, resource.amount);
+				resource.amount -= amountGathered;
+				unit.currentAction.carrying += amountGathered;
+			}
+		} else {
+			// Other resources: normal gathering
+			gatherRate = resource.gatherRate * bonus;
+			const amountGathered = Math.min(gatherRate * deltaTime, resource.amount);
+			resource.amount -= amountGathered;
+			unit.currentAction.carrying += amountGathered;
+		}
 
 		// Return to drop-off when carrying capacity reached
 		if (unit.currentAction.carrying >= unitStats.carryCapacity) {
 			this.returnResources(unit);
 		}
 
-		// Update resource every 10 ticks
+		// Update resource and gathering progress every 10 ticks
 		if (this.tick % 10 === 0) {
 			this.broadcast('resourceUpdated', {
 				resourceId: resource.id,
 				amount: resource.amount,
+			});
+
+			this.broadcast('unitGatherProgress', {
+				unitId: unit.id,
+				carrying: unit.currentAction?.carrying || 0,
+				capacity: unitStats.carryCapacity,
 			});
 		}
 	}
@@ -308,7 +333,7 @@ export default class Game extends BaseGame {
 
 		if (!townCenter) {
 			// No drop-off point - just add resources immediately and go idle
-			const resourceType = this.resources.get(unit.currentAction.targetId).resourceType;
+			const resourceType = unit.currentAction.gatherType || this.resources.get(unit.currentAction.targetId).resourceType;
 			player.resources[resourceType] += unit.currentAction.carrying;
 
 			this.broadcast('playerResourcesUpdated', {
@@ -325,7 +350,7 @@ export default class Game extends BaseGame {
 		const distance = gridDistance(unit.position, townCenter.position);
 		if (distance <= 2) {
 			// At town center - deposit resources
-			const resourceType = this.resources.get(unit.currentAction.targetId).resourceType;
+			const resourceType = unit.currentAction.gatherType || this.resources.get(unit.currentAction.targetId).resourceType;
 			player.resources[resourceType] += unit.currentAction.carrying;
 
 			this.broadcast('playerResourcesUpdated', {
@@ -363,7 +388,7 @@ export default class Game extends BaseGame {
 				unit.currentAction.returning = true; // Flag to know we're returning
 			} else {
 				// No path to town center - just add resources and go idle
-				const resourceType = this.resources.get(unit.currentAction.targetId).resourceType;
+				const resourceType = unit.currentAction.gatherType || this.resources.get(unit.currentAction.targetId).resourceType;
 				player.resources[resourceType] += unit.currentAction.carrying;
 
 				this.broadcast('playerResourcesUpdated', {
@@ -621,6 +646,31 @@ export default class Game extends BaseGame {
 		for (const cell of cells) {
 			if (!this.isBuildable(cell)) {
 				return { success: false, error: 'Invalid placement' };
+			}
+		}
+
+		// Check proximity requirement (campfires are free to place, others need proximity)
+		if (buildingType !== 'campfire') {
+			const playerBuildings = Array.from(this.buildings.values()).filter(b =>
+				b.playerId === playerId && b.constructionProgress >= 1.0
+			);
+
+			if (playerBuildings.length === 0) {
+				return { success: false, error: 'Must build a campfire first' };
+			}
+
+			// Must be within 10 tiles of an existing building
+			let nearAnyBuilding = false;
+			for (const existingBuilding of playerBuildings) {
+				const distance = gridDistance(position, existingBuilding.position);
+				if (distance <= 10) {
+					nearAnyBuilding = true;
+					break;
+				}
+			}
+
+			if (!nearAnyBuilding) {
+				return { success: false, error: 'Must build within 10 tiles of existing buildings' };
 			}
 		}
 
@@ -887,8 +937,41 @@ export default class Game extends BaseGame {
 
 		this.players.set(id, player);
 
-		// No starting buildings - spawn units in walkable positions around spawn point
-		let spawnedCount = 0;
+		// Store starting units - player will choose spawn location
+		player.pendingSpawn = {
+			startingUnits,
+			needsLocationChoice: true,
+		};
+
+		this.broadcast('playerJoined', { player });
+
+		return player;
+	}
+
+	// Called when player chooses their spawn location
+	spawnPlayerAtLocation(playerId, spawnPosition) {
+		const player = this.players.get(playerId);
+		if (!player || !player.pendingSpawn) {
+			return { success: false, error: 'Player not found or already spawned' };
+		}
+
+		const { startingUnits } = player.pendingSpawn;
+
+		// Spawn campfire at chosen location
+		const campfire = {
+			id: simpleId(),
+			type: 'campfire',
+			playerId,
+			position: { ...spawnPosition },
+			health: BUILDINGS.campfire.maxHealth,
+			maxHealth: BUILDINGS.campfire.maxHealth,
+			constructionProgress: 1.0, // Start complete
+			productionQueue: [],
+		};
+		this.buildings.set(campfire.id, campfire);
+		this.buildingSpatialGrid.add(campfire);
+
+		// Spawn units in walkable positions around campfire
 		for (const unit of startingUnits) {
 			// Find walkable position in a spiral around spawn point
 			let foundPosition = false;
@@ -896,7 +979,7 @@ export default class Game extends BaseGame {
 				for (let dx = -radius; dx <= radius && !foundPosition; dx++) {
 					for (let dy = -radius; dy <= radius && !foundPosition; dy++) {
 						if (Math.abs(dx) === radius || Math.abs(dy) === radius) {
-							const pos = { x: spawnPos.x + dx, y: spawnPos.y + dy };
+							const pos = { x: spawnPosition.x + dx, y: spawnPosition.y + dy };
 							if (this.isWalkable(pos)) {
 								// Check if not occupied by another just-spawned unit
 								let occupied = false;
@@ -909,7 +992,6 @@ export default class Game extends BaseGame {
 								if (!occupied) {
 									this.spawnUnit(unit.type, id, pos);
 									foundPosition = true;
-									spawnedCount++;
 								}
 							}
 						}

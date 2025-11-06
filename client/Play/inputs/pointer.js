@@ -149,6 +149,32 @@ export const onPointerMove = throttle((pointer) => {
 			}
 		}
 
+		// Check proximity requirement (except for campfires)
+		if (gameContext.placingBuilding.type !== 'campfire' && isValid) {
+			const completedBuildings = Array.from(gameContext.buildings.values()).filter(b =>
+				b.playerId === gameContext.playerId && b.constructionProgress >= 1.0
+			);
+
+			if (completedBuildings.length === 0) {
+				isValid = false; // No buildings yet, must build campfire first
+			} else {
+				// Check if within 10 tiles of any building
+				let nearAnyBuilding = false;
+				for (const building of completedBuildings) {
+					const dx = Math.abs(gridPos.x - building.position.x);
+					const dy = Math.abs(gridPos.y - building.position.y);
+					const distance = Math.max(dx, dy); // Chebyshev distance
+					if (distance <= 10) {
+						nearAnyBuilding = true;
+						break;
+					}
+				}
+				if (!nearAnyBuilding) {
+					isValid = false;
+				}
+			}
+		}
+
 		// Update ghost color based on validity
 		const color = isValid ? 0x00ff00 : 0xff0000;
 		gameContext.buildingGhost.setFillStyle(color, 0.3);
@@ -303,25 +329,71 @@ export const onPointerUp = async (pointer) => {
 		);
 
 		if (clickedResource) {
-			availableActions.push({
-				label: 'Gather',
-				onSelect: () => {
-					console.log('Gather action selected, assigning to units:', gameContext.selectedUnits);
-					gameContext.selectedUnits.forEach(async (unitId) => {
-						try {
-							console.log('Assigning gather task to unit:', unitId, 'resource:', clickedResource.resourceId);
-							await assignTask({
-								unitId,
-								taskType: 'gather',
-								targetId: clickedResource.resourceId,
-							});
-							console.log('Gather task assigned successfully');
-						} catch (err) {
-							console.error(`Failed to assign gather task:`, err);
-						}
-					});
-				},
-			});
+			// Check if it's a forest (offers dual gather)
+			const resourceData = gameContext.resources.get(clickedResource.resourceId);
+			const isForest = resourceData?.type === 'forest';
+
+			if (isForest) {
+				// Forests offer two gathering options
+				availableActions.push({
+					label: 'Food',
+					onSelect: () => {
+						console.log('Gather Food action selected');
+						gameContext.selectedUnits.forEach(async (unitId) => {
+							try {
+								await assignTask({
+									unitId,
+									taskType: 'gather',
+									targetId: clickedResource.resourceId,
+									gatherType: 'food',
+								});
+							} catch (err) {
+								console.error(`Failed to assign gather food task:`, err);
+							}
+						});
+					},
+				});
+
+				availableActions.push({
+					label: 'Wood',
+					onSelect: () => {
+						console.log('Chop Wood action selected');
+						gameContext.selectedUnits.forEach(async (unitId) => {
+							try {
+								await assignTask({
+									unitId,
+									taskType: 'gather',
+									targetId: clickedResource.resourceId,
+									gatherType: 'wood',
+								});
+							} catch (err) {
+								console.error(`Failed to assign chop wood task:`, err);
+							}
+						});
+					},
+				});
+			} else {
+				// Other resources have single gather option
+				availableActions.push({
+					label: 'Gather',
+					onSelect: () => {
+						console.log('Gather action selected, assigning to units:', gameContext.selectedUnits);
+						gameContext.selectedUnits.forEach(async (unitId) => {
+							try {
+								console.log('Assigning gather task to unit:', unitId, 'resource:', clickedResource.resourceId);
+								await assignTask({
+									unitId,
+									taskType: 'gather',
+									targetId: clickedResource.resourceId,
+								});
+								console.log('Gather task assigned successfully');
+							} catch (err) {
+								console.error(`Failed to assign gather task:`, err);
+							}
+						});
+					},
+				});
+			}
 		}
 
 		// Check if clicked on a building

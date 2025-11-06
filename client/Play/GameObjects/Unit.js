@@ -36,6 +36,22 @@ export default class Unit extends Phaser.GameObjects.Container {
 		this.healthBarFrame.setFillStyle(0x000000, 0);
 		this.add(this.healthBarFrame);
 
+		// Gathering progress bar (yellow, below health bar, starts hidden)
+		this.gatherBarBg = scene.add.rectangle(0, -9, 32, 3, 0x000000);
+		this.gatherBarBg.setVisible(false);
+		this.add(this.gatherBarBg);
+
+		this.gatherBar = scene.add.rectangle(-16, -9, 0, 3, 0xFFD700);
+		this.gatherBar.setOrigin(0, 0.5);
+		this.gatherBar.setVisible(false);
+		this.add(this.gatherBar);
+
+		this.gatherBarFrame = scene.add.rectangle(0, -9, 32, 3);
+		this.gatherBarFrame.setStrokeStyle(1, 0xffffff, 0.8);
+		this.gatherBarFrame.setFillStyle(0x000000, 0);
+		this.gatherBarFrame.setVisible(false);
+		this.add(this.gatherBarFrame);
+
 		this.updateHealthBar();
 
 		// Store in game context
@@ -81,6 +97,25 @@ export default class Unit extends Phaser.GameObjects.Container {
 		// } else {
 		// 	this.healthBar.setFillStyle(0xFF0000);
 		// }
+	}
+
+	updateGatherProgress() {
+		// Show/hide gathering progress bar based on unit status
+		const isGathering = this.unitData.status === 'gathering';
+		const carryCapacity = UNITS[this.unitData.type].carryCapacity;
+		const carrying = this.unitData.currentAction?.carrying || 0;
+		const progress = carrying / carryCapacity;
+
+		if (isGathering && carrying > 0) {
+			this.gatherBarBg.setVisible(true);
+			this.gatherBar.setVisible(true);
+			this.gatherBarFrame.setVisible(true);
+			this.gatherBar.width = 32 * progress;
+		} else {
+			this.gatherBarBg.setVisible(false);
+			this.gatherBar.setVisible(false);
+			this.gatherBarFrame.setVisible(false);
+		}
 	}
 
 	setSelected(selected) {
