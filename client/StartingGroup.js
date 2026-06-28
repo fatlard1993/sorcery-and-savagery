@@ -1,4 +1,4 @@
-import { styled, Component, Button, Elem, Input } from 'vanilla-bean-components';
+import { styled, Component, Button, Elem, Input } from '@vanilla-bean/components';
 import { UNITS } from '../constants/index.js';
 import { createGame, joinGame } from './api/game.js';
 import gameContext from './shared/gameContext.js';
@@ -29,28 +29,28 @@ export default class StartingGroup extends styled.Component`
 	overflow-y: auto;
 	width: 100%;
 
-	h1 {
+	& h1 {
 		font-size: 2.5em;
 		color: #FFD700;
 		margin-bottom: 10px;
 	}
 
-	.subtitle {
+	& .subtitle {
 		color: #aaa;
 		margin-bottom: 20px;
 	}
 
-	.player-name-input {
+	& .player-name-input {
 		margin-bottom: 30px;
 	}
 
-	.counter {
+	& .counter {
 		font-size: 1.2em;
 		color: #FFD700;
 		margin-bottom: 20px;
 	}
 
-	.unit-classes {
+	& .unit-classes {
 		display: flex;
 		gap: 20px;
 		margin-bottom: 30px;
@@ -58,7 +58,7 @@ export default class StartingGroup extends styled.Component`
 		justify-content: center;
 	}
 
-	.unit-card {
+	& .unit-card {
 		border: 3px solid #444;
 		padding: 20px;
 		background: #222;
@@ -69,25 +69,25 @@ export default class StartingGroup extends styled.Component`
 		gap: 10px;
 	}
 
-	.unit-name {
+	& .unit-name {
 		font-size: 1.3em;
 		color: #FFD700;
 	}
 
-	.unit-description {
+	& .unit-description {
 		color: #ccc;
 		font-size: 0.85em;
 		text-align: center;
 		margin-bottom: 10px;
 	}
 
-	.unit-counter {
+	& .unit-counter {
 		display: flex;
 		align-items: center;
 		gap: 10px;
 	}
 
-	.count-button {
+	& .count-button {
 		width: 30px;
 		height: 30px;
 		background: #444;
@@ -110,7 +110,7 @@ export default class StartingGroup extends styled.Component`
 		}
 	}
 
-	.count-display {
+	& .count-display {
 		font-size: 1.5em;
 		color: #FFD700;
 		min-width: 30px;
@@ -140,8 +140,7 @@ export default class StartingGroup extends styled.Component`
 		return Object.values(this.unitCounts).reduce((sum, count) => sum + count, 0);
 	}
 
-	render() {
-		super.render();
+	build() {
 
 		console.log('Render called, playerName is:', this.playerName);
 

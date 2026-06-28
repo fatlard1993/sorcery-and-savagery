@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { debounce, Notify } from 'vanilla-bean-components';
+import { debounce, Notify } from '@vanilla-bean/components';
 
 let socket;
 let reconnectAttempts = 0;

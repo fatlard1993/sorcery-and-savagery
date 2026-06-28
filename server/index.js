@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import '../byod-web-game/server/exit.js';
+import '@fatlard1993/web-game-framework/utils/exit';
 import server from './server.js';
 import './devConsole.js';
 

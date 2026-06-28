@@ -1,4 +1,4 @@
-import { styled, Button, Elem } from 'vanilla-bean-components';
+import { styled, Button, Elem } from '@vanilla-bean/components';
 import { getGames } from './api/game.js';
 
 export default class Hub extends styled.Component`
@@ -8,19 +8,19 @@ export default class Hub extends styled.Component`
 	padding: 40px;
 	height: 100vh;
 
-	h1 {
+	& h1 {
 		font-size: 2.5em;
 		color: #FFD700;
 		margin-bottom: 30px;
 	}
 
-	.games-list {
+	& .games-list {
 		width: 100%;
 		max-width: 600px;
 		margin-bottom: 20px;
 	}
 
-	.game-item {
+	& .game-item {
 		background: #222;
 		border: 2px solid #444;
 		padding: 15px;
@@ -34,26 +34,28 @@ export default class Hub extends styled.Component`
 		}
 	}
 
-	.game-name {
+	& .game-name {
 		font-size: 1.2em;
 		color: #FFD700;
 		margin-bottom: 5px;
 	}
 
-	.game-info {
+	& .game-info {
 		color: #aaa;
 		font-size: 0.9em;
 	}
 
-	.no-games {
+	& .no-games {
 		color: #888;
 		font-style: italic;
 		margin: 40px 0;
 	}
 ` {
-	async render() {
-		super.render();
+	build() {
+		this._init();
+	}
 
+	async _init() {
 		new Elem({
 			appendTo: this,
 			tag: 'h1',

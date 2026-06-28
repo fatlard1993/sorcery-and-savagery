@@ -1,4 +1,4 @@
-import { styled, Component, Button, Elem } from 'vanilla-bean-components';
+import { styled, Component, Button, Elem } from '@vanilla-bean/components';
 import { BUILDINGS } from '../../constants/index.js';
 import gameContext from '../shared/gameContext.js';
 
@@ -15,20 +15,20 @@ export default class BuildingMenu extends styled.Component`
 	max-height: 80vh;
 	overflow-y: auto;
 
-	h2 {
+	& h2 {
 		color: #FFD700;
 		margin-bottom: 20px;
 		text-align: center;
 	}
 
-	.buildings-grid {
+	& .buildings-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 		gap: 15px;
 		margin-bottom: 20px;
 	}
 
-	.building-card {
+	& .building-card {
 		border: 2px solid #444;
 		padding: 15px;
 		background: #222;
@@ -46,23 +46,23 @@ export default class BuildingMenu extends styled.Component`
 		}
 	}
 
-	.building-name {
+	& .building-name {
 		font-size: 1.2em;
 		color: #FFD700;
 		margin-bottom: 8px;
 	}
 
-	.building-cost {
+	& .building-cost {
 		color: #90EE90;
 		font-size: 0.9em;
 		margin: 4px 0;
 	}
 
-	.building-cost.insufficient {
+	& .building-cost.insufficient {
 		color: #ff6666;
 	}
 
-	.close-button {
+	& .close-button {
 		margin-top: 15px;
 		width: 100%;
 	}
@@ -72,8 +72,7 @@ export default class BuildingMenu extends styled.Component`
 		this.onSelect = options.onSelect;
 	}
 
-	render() {
-		super.render();
+	build() {
 
 		new Elem({
 			appendTo: this,

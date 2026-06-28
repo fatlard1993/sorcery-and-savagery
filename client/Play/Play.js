@@ -1,5 +1,5 @@
-import { styled, Component } from 'vanilla-bean-components';
-import { onMessage } from '../../byod-web-game/client/socket.js';
+import { styled, Component } from '@vanilla-bean/components';
+import { onMessage } from '../socket.js';
 import gameContext from '../shared/gameContext.js';
 import Game from './Game.js';
 import ResourceHUD from './ResourceHUD.js';
@@ -30,7 +30,7 @@ export default class Play extends styled.Component`
 			const result = await getGame({ gameId: this.gameId });
 
 			// Check if request failed
-			if (!result.success) {
+			if (result.status !== 'success') {
 				console.error('Game not found');
 				window.location.href = '#/';
 				return false;
@@ -47,9 +47,12 @@ export default class Play extends styled.Component`
 		}
 	}
 
-	async render() {
-		console.log('Play render() called');
-		super.render();
+	build() {
+		this._init();
+	}
+
+	async _init() {
+		console.log('Play _init() called');
 
 		// Load fresh game state before initializing
 		const loaded = await this.loadGameState();

@@ -1,4 +1,4 @@
-import { GET, POST } from 'vanilla-bean-components';
+import { GET, POST } from '@vanilla-bean/hypertether';
 import gameContext from '../shared/gameContext.js';
 
 const apiContext = () => ({

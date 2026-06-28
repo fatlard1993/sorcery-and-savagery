@@ -1,4 +1,4 @@
-import { styled, Component } from 'vanilla-bean-components';
+import { styled, Component } from '@vanilla-bean/components';
 import Phaser from 'phaser';
 import gameContext from '../shared/gameContext.js';
 import GameScene from './GameScene.js';
@@ -8,7 +8,7 @@ export default class Game extends styled.Component`
 	width: 100%;
 	overflow: hidden;
 
-	canvas {
+	& canvas {
 		display: block !important;
 		width: 100% !important;
 		height: 100% !important;
@@ -21,8 +21,7 @@ export default class Game extends styled.Component`
 		console.log('this.elem parent:', this.elem?.parentElement);
 	}
 
-	render() {
-		super.render();
+	build() {
 		console.log('Game render - creating Phaser');
 		console.log('this.elem:', this.elem);
 		console.log('this.elem in DOM:', document.body.contains(this.elem));

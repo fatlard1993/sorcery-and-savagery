@@ -1,5 +1,4 @@
 import { nanoid } from 'nanoid';
-import routerUtil from '../../byod-web-game/server/router.js';
 import gameRouter from './game.js';
 import staticRouter from './static.js';
 

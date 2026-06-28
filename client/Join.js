@@ -1,4 +1,4 @@
-import { styled, Component, Button, Elem, Input } from 'vanilla-bean-components';
+import { styled, Component, Button, Elem, Input } from '@vanilla-bean/components';
 import { STARTING_GROUPS } from '../constants/index.js';
 import { joinGame, getGame } from './api/game.js';
 import gameContext from './shared/gameContext.js';
@@ -11,13 +11,13 @@ export default class Join extends styled.Component`
 	height: 100vh;
 	gap: 20px;
 
-	h1 {
+	& h1 {
 		font-size: 2em;
 		color: #FFD700;
 		margin-bottom: 20px;
 	}
 
-	.groups {
+	& .groups {
 		display: flex;
 		gap: 20px;
 		margin: 20px 0;
@@ -25,7 +25,7 @@ export default class Join extends styled.Component`
 		justify-content: center;
 	}
 
-	.group-card {
+	& .group-card {
 		border: 3px solid #444;
 		padding: 15px;
 		cursor: pointer;
@@ -42,13 +42,13 @@ export default class Join extends styled.Component`
 		}
 	}
 
-	.group-name {
+	& .group-name {
 		font-size: 1.2em;
 		color: #FFD700;
 		margin-bottom: 5px;
 	}
 
-	.group-bonuses {
+	& .group-bonuses {
 		color: #90EE90;
 		font-size: 0.8em;
 	}
@@ -60,9 +60,11 @@ export default class Join extends styled.Component`
 		this.playerName = sessionStorage.getItem('playerName') || '';
 	}
 
-	async render() {
-		super.render();
+	build() {
+		this._init();
+	}
 
+	async _init() {
 		// Check if game exists
 		try {
 			await getGame({ gameId: this.gameId });

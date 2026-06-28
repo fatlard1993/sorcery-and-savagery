@@ -1,4 +1,4 @@
-import BaseGame from '../byod-web-game/server/Game.js';
+import { Game as BaseGame } from '@fatlard1993/web-game-framework';
 import { STARTING_GROUPS, UNITS, BUILDINGS, RESOURCE_TYPES, WORLD_CONFIG, TERRAIN_TYPES } from '../constants/index.js';
 import { simpleId, gridDistance, findPath, getCellsInRect } from '../utils/index.js';
 import { SpatialGrid } from '../utils/spatial.js';

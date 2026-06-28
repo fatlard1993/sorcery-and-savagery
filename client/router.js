@@ -1,4 +1,4 @@
-import { Router } from 'vanilla-bean-components';
+import { Router } from '@vanilla-bean/components';
 import Home from './Home.js';
 import StartingGroup from './StartingGroup.js';
 import Hub from './Hub.js';

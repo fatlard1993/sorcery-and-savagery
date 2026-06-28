@@ -1,4 +1,4 @@
-import { styled, Elem } from 'vanilla-bean-components';
+import { styled, Elem } from '@vanilla-bean/components';
 import { RESOURCE_COLORS } from '../../constants/index.js';
 import gameContext from '../shared/gameContext.js';
 
@@ -11,31 +11,30 @@ export default class ResourceHUD extends styled.Component`
 	border-bottom: 2px solid #444;
 	height: 60px;
 
-	.resource {
+	& .resource {
 		display: flex;
 		align-items: center;
 		gap: 8px;
 		font-size: 1.1em;
 	}
 
-	.resource-icon {
+	& .resource-icon {
 		width: 20px;
 		height: 20px;
 		border-radius: 3px;
 	}
 
-	.resource-amount {
+	& .resource-amount {
 		color: #FFD700;
 		font-weight: bold;
 		min-width: 60px;
 	}
 
-	.population {
+	& .population {
 		color: #FFF;
 	}
 ` {
-	render() {
-		super.render();
+	build() {
 
 		// Update every second
 		this.updateInterval = setInterval(() => this.updateResources(), 1000);

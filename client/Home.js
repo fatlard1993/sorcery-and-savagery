@@ -1,4 +1,4 @@
-import { styled, Button, Elem } from 'vanilla-bean-components';
+import { styled, Button, Elem } from '@vanilla-bean/components';
 
 export default class Home extends styled.Component`
 	display: flex;
@@ -9,27 +9,26 @@ export default class Home extends styled.Component`
 	height: 100vh;
 	gap: 20px;
 
-	h1 {
+	& h1 {
 		font-size: 3em;
 		color: #FFD700;
 		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 		margin-bottom: 20px;
 	}
 
-	.subtitle {
+	& .subtitle {
 		font-size: 1.2em;
 		color: #aaa;
 		margin-bottom: 40px;
 	}
 
-	.button-group {
+	& .button-group {
 		display: flex;
 		flex-direction: column;
 		gap: 15px;
 	}
 ` {
-	render() {
-		super.render();
+	build() {
 
 		this.title = new Elem({
 			appendTo: this,

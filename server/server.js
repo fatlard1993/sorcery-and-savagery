@@ -1,6 +1,6 @@
 import { homedir } from 'os';
 import { join } from 'path';
-import Server from '../byod-web-game/server/Server.js';
+import { Server } from '@fatlard1993/web-game-framework';
 import router from './router/index.js';
 import Game from './Game.js';
 

@@ -1,4 +1,4 @@
-import { Context } from 'vanilla-bean-components';
+import { Oxject as Context } from '@vanilla-bean/components';
 
 // Custom Players map with update helper
 class Players extends Map {

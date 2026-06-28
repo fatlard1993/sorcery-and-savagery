@@ -1,4 +1,4 @@
-import requestMatch from '../../byod-web-game/server/requestMatch.js';
+import { requestMatch } from '@fatlard1993/web-game-framework/utils';
 
 const gameRouter = async (request, server) => {
 	let match;
