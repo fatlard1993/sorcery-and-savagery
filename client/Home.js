@@ -1,6 +1,6 @@
 import { styled, Button, Elem } from '@vanilla-bean/components';
 
-export default class Home extends styled.Component`
+export default class Home extends (styled.Component`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -11,7 +11,7 @@ export default class Home extends styled.Component`
 
 	& h1 {
 		font-size: 3em;
-		color: #FFD700;
+		color: #ffd700;
 		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 		margin-bottom: 20px;
 	}
@@ -27,9 +27,8 @@ export default class Home extends styled.Component`
 		flex-direction: column;
 		gap: 15px;
 	}
-` {
+`) {
 	build() {
-
 		this.title = new Elem({
 			appendTo: this,
 			tag: 'h1',

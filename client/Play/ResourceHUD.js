@@ -2,7 +2,7 @@ import { styled, Elem } from '@vanilla-bean/components';
 import { RESOURCE_COLORS } from '../../constants/index.js';
 import gameContext from '../shared/gameContext.js';
 
-export default class ResourceHUD extends styled.Component`
+export default class ResourceHUD extends (styled.Component`
 	display: flex;
 	justify-content: space-around;
 	align-items: center;
@@ -25,17 +25,16 @@ export default class ResourceHUD extends styled.Component`
 	}
 
 	& .resource-amount {
-		color: #FFD700;
+		color: #ffd700;
 		font-weight: bold;
 		min-width: 60px;
 	}
 
 	& .population {
-		color: #FFF;
+		color: #fff;
 	}
-` {
+`) {
 	build() {
-
 		// Update every second
 		this.updateInterval = setInterval(() => this.updateResources(), 1000);
 

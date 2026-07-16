@@ -6,15 +6,12 @@ const gameRouter = async (request, server) => {
 	// Create new game
 	match = requestMatch('POST', '/api/games', request);
 	if (match) {
-		const { name, startingGroup } = await request.json();
+		const { name } = await request.json();
 
 		const game = new server.Game({
 			name: name || 'New Game',
 			server,
 		});
-
-		server.games[game.id] = game;
-		game.save();
 
 		return Response.json({ gameId: game.id }, { status: 201 });
 	}
@@ -22,11 +19,13 @@ const gameRouter = async (request, server) => {
 	// Get all games
 	match = requestMatch('GET', '/api/games', request);
 	if (match) {
-		const games = Object.values(server.games).filter(g => g).map((game) => ({
-			id: game.id,
-			name: game.name,
-			playerCount: game.players.size,
-		}));
+		const games = Object.values(server.games)
+			.filter(g => g)
+			.map(game => ({
+				id: game.id,
+				name: game.name,
+				playerCount: game.players.size,
+			}));
 
 		return Response.json(games);
 	}
@@ -71,7 +70,14 @@ const gameRouter = async (request, server) => {
 
 		const { path } = await request.json();
 
-		console.log(`[MOVE] Unit ${match.unitId} - Current pos:`, unit.position, 'Status:', unit.status, 'Path length:', path.length);
+		console.log(
+			`[MOVE] Unit ${match.unitId} - Current pos:`,
+			unit.position,
+			'Status:',
+			unit.status,
+			'Path length:',
+			path.length,
+		);
 
 		unit.path = path;
 		unit.status = 'moving';
@@ -173,7 +179,12 @@ const gameRouter = async (request, server) => {
 
 			// Find an unoccupied build position for this unit
 			const buildPosition = game.findBuildPositionForUnit(building, unit);
-			console.log(`[ASSIGN] Unit ${match.unitId} assigned build position:`, buildPosition, 'for building at:', building.position);
+			console.log(
+				`[ASSIGN] Unit ${match.unitId} assigned build position:`,
+				buildPosition,
+				'for building at:',
+				building.position,
+			);
 			if (!buildPosition) {
 				return Response.json({ error: 'No available build position' }, { status: 400 });
 			}

@@ -3,11 +3,7 @@ export const STARTING_GROUPS = {
 		id: 'foresters',
 		name: 'The Foresters',
 		description: 'Masters of the woodland, skilled in living off the land.',
-		bonuses: [
-			'Start with extra wood',
-			'+50% wood and food gathering speed',
-			'+2 starting workers',
-		],
+		bonuses: ['Start with extra wood', '+50% wood and food gathering speed', '+2 starting workers'],
 		startingResources: {
 			wood: 400,
 			stone: 150,
@@ -34,11 +30,7 @@ export const STARTING_GROUPS = {
 		id: 'miners',
 		name: 'The Miners',
 		description: 'Deep delvers who extract stone and iron from the earth.',
-		bonuses: [
-			'Start with Mine',
-			'+50% stone and iron gathering speed',
-			'+2 starting workers',
-		],
+		bonuses: ['Start with Mine', '+50% stone and iron gathering speed', '+2 starting workers'],
 		startingResources: {
 			wood: 150,
 			stone: 300,
@@ -66,11 +58,7 @@ export const STARTING_GROUPS = {
 		id: 'farmers',
 		name: 'The Farmers',
 		description: 'Agricultural experts who feed their people and support large populations.',
-		bonuses: [
-			'Start with 2 Farms',
-			'+50% food production',
-			'+3 starting workers',
-		],
+		bonuses: ['Start with 2 Farms', '+50% food production', '+3 starting workers'],
 		startingResources: {
 			wood: 200,
 			stone: 150,
@@ -99,11 +87,7 @@ export const STARTING_GROUPS = {
 		id: 'mystics',
 		name: 'The Mystics',
 		description: 'Practitioners of ancient magic who draw power from water and the natural world.',
-		bonuses: [
-			'Start with Well and Mage Tower',
-			'+50% water gathering speed',
-			'Unlock magic units immediately',
-		],
+		bonuses: ['Start with Well and Mage Tower', '+50% water gathering speed', 'Unlock magic units immediately'],
 		startingResources: {
 			wood: 200,
 			stone: 150,

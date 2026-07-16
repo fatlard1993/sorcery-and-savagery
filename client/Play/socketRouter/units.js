@@ -39,7 +39,7 @@ export default function units(data) {
 				const oldPosition = { ...unit.position };
 				unit.position = data.position;
 
-				const sprite = unitsLayer.list.find((obj) => obj.unitId === data.unitId);
+				const sprite = unitsLayer.list.find(obj => obj.unitId === data.unitId);
 				if (sprite) {
 					// Calculate distance moved to determine animation duration
 					const dx = data.position.x - oldPosition.x;
@@ -64,8 +64,8 @@ export default function units(data) {
 				target.health = data.targetHealth;
 
 				const layer = data.targetType === 'unit' ? unitsLayer : gameContext.sceneLayers.buildings;
-				const sprite = layer.list.find((obj) =>
-					(data.targetType === 'unit' ? obj.unitId : obj.buildingId) === data.targetId
+				const sprite = layer.list.find(
+					obj => (data.targetType === 'unit' ? obj.unitId : obj.buildingId) === data.targetId,
 				);
 				if (sprite) {
 					sprite.updateHealthBar();
@@ -75,7 +75,7 @@ export default function units(data) {
 		}
 
 		case 'unitDestroyed': {
-			const sprite = unitsLayer.list.find((obj) => obj.unitId === data.unitId);
+			const sprite = unitsLayer.list.find(obj => obj.unitId === data.unitId);
 			if (sprite) {
 				sprite.destroy();
 			}
@@ -94,7 +94,7 @@ export default function units(data) {
 				console.log(`Unit ${data.unitId} assigned task:`, data.status, data.currentAction);
 
 				// Update gathering progress bar on sprite
-				const sprite = unitsLayer.list.find((obj) => obj.unitId === data.unitId);
+				const sprite = unitsLayer.list.find(obj => obj.unitId === data.unitId);
 				if (sprite && sprite.updateGatherProgress) {
 					sprite.updateGatherProgress();
 				}
@@ -108,7 +108,7 @@ export default function units(data) {
 			if (unit && unit.currentAction) {
 				unit.currentAction.carrying = data.carrying;
 
-				const sprite = unitsLayer.list.find((obj) => obj.unitId === data.unitId);
+				const sprite = unitsLayer.list.find(obj => obj.unitId === data.unitId);
 				if (sprite && sprite.updateGatherProgress) {
 					sprite.updateGatherProgress();
 				}

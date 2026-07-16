@@ -1,7 +1,7 @@
 import { styled, Button, Elem } from '@vanilla-bean/components';
 import { getGames } from './api/game.js';
 
-export default class Hub extends styled.Component`
+export default class Hub extends (styled.Component`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -10,7 +10,7 @@ export default class Hub extends styled.Component`
 
 	& h1 {
 		font-size: 2.5em;
-		color: #FFD700;
+		color: #ffd700;
 		margin-bottom: 30px;
 	}
 
@@ -29,14 +29,14 @@ export default class Hub extends styled.Component`
 		transition: all 0.2s;
 
 		&:hover {
-			border-color: #FFD700;
+			border-color: #ffd700;
 			transform: translateX(5px);
 		}
 	}
 
 	& .game-name {
 		font-size: 1.2em;
-		color: #FFD700;
+		color: #ffd700;
 		margin-bottom: 5px;
 	}
 
@@ -50,7 +50,7 @@ export default class Hub extends styled.Component`
 		font-style: italic;
 		margin: 40px 0;
 	}
-` {
+`) {
 	build() {
 		this._init();
 	}
@@ -67,9 +67,10 @@ export default class Hub extends styled.Component`
 		this.gamesList = new Elem({
 			appendTo: this,
 			className: 'games-list',
-			append: games.length === 0
-				? [new Elem({ className: 'no-games', textContent: 'No active games. Create one!' })]
-				: games.map((game) => this.createGameItem(game)),
+			append:
+				games.length === 0
+					? [new Elem({ className: 'no-games', textContent: 'No active games. Create one!' })]
+					: games.map(game => this.createGameItem(game)),
 		});
 
 		new Button({

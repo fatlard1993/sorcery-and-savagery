@@ -16,7 +16,7 @@ export default function buildings(data) {
 		}
 
 		case 'buildingConstructionProgress': {
-			const sprite = buildingsLayer.list.find((obj) => obj.buildingId === data.buildingId);
+			const sprite = buildingsLayer.list.find(obj => obj.buildingId === data.buildingId);
 			if (sprite) {
 				sprite.updateConstruction(data.progress);
 			}
@@ -24,7 +24,7 @@ export default function buildings(data) {
 		}
 
 		case 'buildingCompleted': {
-			const sprite = buildingsLayer.list.find((obj) => obj.buildingId === data.buildingId);
+			const sprite = buildingsLayer.list.find(obj => obj.buildingId === data.buildingId);
 			if (sprite) {
 				sprite.updateConstruction(1.0);
 			}
@@ -32,7 +32,7 @@ export default function buildings(data) {
 		}
 
 		case 'buildingDestroyed': {
-			const sprite = buildingsLayer.list.find((obj) => obj.buildingId === data.buildingId);
+			const sprite = buildingsLayer.list.find(obj => obj.buildingId === data.buildingId);
 			if (sprite) {
 				sprite.destroy();
 			}

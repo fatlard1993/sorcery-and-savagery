@@ -33,12 +33,7 @@ export function pxToGridPosition({ x, y }) {
  * @param root0.y
  */
 export function isValidGridPosition({ x, y }) {
-	return (
-		x >= 0 &&
-		x < WORLD_CONFIG.width &&
-		y >= 0 &&
-		y < WORLD_CONFIG.height
-	);
+	return x >= 0 && x < WORLD_CONFIG.width && y >= 0 && y < WORLD_CONFIG.height;
 }
 
 /**

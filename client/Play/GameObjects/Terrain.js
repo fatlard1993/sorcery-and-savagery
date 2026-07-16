@@ -39,7 +39,7 @@ export default class Terrain extends Phaser.GameObjects.Container {
 			for (let rx = 0; rx < size.width; rx++) {
 				for (let ry = 0; ry < size.height; ry++) {
 					if (r.position.x + rx === x && r.position.y + ry === y) {
-							return true;
+						return true;
 					}
 				}
 			}

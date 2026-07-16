@@ -1,6 +1,6 @@
 import gameContext from '../../shared/gameContext.js';
 
-export const onKeyDown = (event) => {
+export const onKeyDown = event => {
 	// Escape - close menus first, then deselect
 	if (event.key === 'Escape' || event.keyCode === 27) {
 		console.log('Escape pressed');
@@ -36,8 +36,8 @@ export const onKeyDown = (event) => {
 		console.log('Deselecting all units');
 		const unitsLayer = gameContext.sceneLayers?.units;
 		if (unitsLayer) {
-			gameContext.selectedUnits.forEach((unitId) => {
-				const unit = unitsLayer.list.find((obj) => obj.unitId === unitId);
+			gameContext.selectedUnits.forEach(unitId => {
+				const unit = unitsLayer.list.find(obj => obj.unitId === unitId);
 				if (unit && unit.setSelected) {
 					unit.setSelected(false);
 				}
@@ -59,15 +59,15 @@ export const onKeyDown = (event) => {
 			const savedGroup = gameContext[`controlGroup${groupNum}`];
 			if (savedGroup) {
 				// Clear current selection
-				gameContext.selectedUnits.forEach((unitId) => {
-					const unit = gameContext.scene.children.list.find((obj) => obj.unitId === unitId);
+				gameContext.selectedUnits.forEach(unitId => {
+					const unit = gameContext.scene.children.list.find(obj => obj.unitId === unitId);
 					if (unit) unit.setSelected(false);
 				});
 				gameContext.selectedUnits.clear();
 
 				// Select saved group
-				savedGroup.forEach((unitId) => {
-					const unit = gameContext.scene.children.list.find((obj) => obj.unitId === unitId);
+				savedGroup.forEach(unitId => {
+					const unit = gameContext.scene.children.list.find(obj => obj.unitId === unitId);
 					if (unit) {
 						gameContext.selectedUnits.add(unitId);
 						unit.setSelected(true);

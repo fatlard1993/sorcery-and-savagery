@@ -6,7 +6,7 @@ const apiContext = () => ({
 	playerId: gameContext.playerId,
 });
 
-export const createGame = async (options) =>
+export const createGame = async options =>
 	await POST('/api/games', {
 		...options,
 	});
@@ -16,7 +16,7 @@ export const joinGame = async ({ gameId, ...options }) =>
 		...options,
 	});
 
-export const getGames = async (options) =>
+export const getGames = async options =>
 	await GET('/api/games', {
 		...options,
 	});

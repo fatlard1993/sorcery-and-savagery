@@ -28,36 +28,19 @@ export default class Building extends Phaser.GameObjects.Container {
 
 		// Player color tint
 		const playerIndex = [...gameContext.players.keys()].indexOf(buildingData.playerId);
-		const playerColor = PLAYER_COLORS[playerIndex] || 0xFFFFFF;
+		const playerColor = PLAYER_COLORS[playerIndex] || 0xffffff;
 		// this.sprite.setTint(playerColor);
 
 		// Health bar background
-		this.healthBarBg = scene.add.rectangle(
-			0,
-			-stats.size.height * 16 - 10,
-			stats.size.width * 32,
-			4,
-			0x000000
-		);
+		this.healthBarBg = scene.add.rectangle(0, -stats.size.height * 16 - 10, stats.size.width * 32, 4, 0x000000);
 		this.add(this.healthBarBg);
 
 		// Health bar
-		this.healthBar = scene.add.rectangle(
-			0,
-			-stats.size.height * 16 - 10,
-			stats.size.width * 32,
-			4,
-			playerColor
-		);
+		this.healthBar = scene.add.rectangle(0, -stats.size.height * 16 - 10, stats.size.width * 32, 4, playerColor);
 		this.add(this.healthBar);
 
 		// Health bar frame
-		this.healthBarFrame = scene.add.rectangle(
-			0,
-			-stats.size.height * 16 - 10,
-			stats.size.width * 32,
-			4
-		);
+		this.healthBarFrame = scene.add.rectangle(0, -stats.size.height * 16 - 10, stats.size.width * 32, 4);
 		this.healthBarFrame.setStrokeStyle(1, 0xffffff, 0.8);
 		this.healthBarFrame.setFillStyle(0x000000, 0);
 		this.add(this.healthBarFrame);
@@ -69,7 +52,7 @@ export default class Building extends Phaser.GameObjects.Container {
 			-stats.size.height * 16 - 18,
 			stats.size.width * 32,
 			6,
-			0x000000
+			0x000000,
 		);
 		this.constructionBarBg.setOrigin(0, 0.5);
 		this.add(this.constructionBarBg);
@@ -79,7 +62,7 @@ export default class Building extends Phaser.GameObjects.Container {
 			-stats.size.height * 16 - 18,
 			0, // Start at 0 width
 			6,
-			0xFFD700
+			0xffd700,
 		);
 		this.constructionBar.setOrigin(0, 0.5);
 		this.add(this.constructionBar);
@@ -88,7 +71,7 @@ export default class Building extends Phaser.GameObjects.Container {
 			-stats.size.width * 16,
 			-stats.size.height * 16 - 18,
 			stats.size.width * 32,
-			6
+			6,
 		);
 		this.constructionBarFrame.setOrigin(0, 0.5);
 		this.constructionBarFrame.setStrokeStyle(1, 0xffffff, 0.8);

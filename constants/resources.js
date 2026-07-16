@@ -34,9 +34,9 @@ export const RESOURCE_TYPES = {
 };
 
 export const RESOURCE_COLORS = {
-	wood: 0x8B4513,
+	wood: 0x8b4513,
 	stone: 0x808080,
-	iron: 0xC0C0C0,
-	water: 0x4169E1,
-	food: 0x90EE90,
+	iron: 0xc0c0c0,
+	water: 0x4169e1,
+	food: 0x90ee90,
 };

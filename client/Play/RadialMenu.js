@@ -36,10 +36,12 @@ export default class RadialMenu {
 				const buttonX = this.x + Math.cos(angle) * this.radius;
 				const buttonY = this.y + Math.sin(angle) * this.radius;
 
-				if (buttonX - this.buttonRadius < 0 ||
+				if (
+					buttonX - this.buttonRadius < 0 ||
 					buttonX + this.buttonRadius > camera.width ||
 					buttonY - this.buttonRadius < 0 ||
-					buttonY + this.buttonRadius > camera.height) {
+					buttonY + this.buttonRadius > camera.height
+				) {
 					allButtonsOnScreen = false;
 					break;
 				}
@@ -58,7 +60,7 @@ export default class RadialMenu {
 
 			// Button background circle
 			const circle = this.scene.add.circle(buttonX, buttonY, this.buttonRadius, 0x444444, 0.9);
-			circle.setStrokeStyle(3, 0xFFD700);
+			circle.setStrokeStyle(3, 0xffd700);
 			circle.setInteractive({ useHandCursor: true });
 
 			// Button label
@@ -99,13 +101,13 @@ export default class RadialMenu {
 		});
 
 		// Center indicator
-		const centerCircle = this.scene.add.circle(0, 0, 10, 0xFFD700, 0.5);
+		const centerCircle = this.scene.add.circle(0, 0, 10, 0xffd700, 0.5);
 		container.add(centerCircle);
 
 		this.container = container;
 
 		// Click outside to close
-		this.scene.input.once('pointerdown', (pointer) => {
+		this.scene.input.once('pointerdown', pointer => {
 			const distance = Phaser.Math.Distance.Between(this.x, this.y, pointer.worldX, pointer.worldY);
 			if (distance > this.radius + this.buttonRadius) {
 				this.destroy();
