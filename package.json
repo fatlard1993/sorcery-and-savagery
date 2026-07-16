@@ -26,7 +26,7 @@
 	},
 	"dependencies": {
 		"@fatlard1993/web-game-framework": "file:../web-game-framework",
-		"@vanilla-bean/components": "^1.0.0",
+		"@vanilla-bean/components": "^1.1.1",
 		"@vanilla-bean/hypertether": "^1.0.0",
 		"argi": "github:fatlard1993/argi#785979e",
 		"emoji-js": "^3.8.1",
