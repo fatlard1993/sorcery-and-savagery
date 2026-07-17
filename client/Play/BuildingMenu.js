@@ -2,13 +2,13 @@ import { styled, Component, Button, Elem } from '@vanilla-bean/components';
 import { BUILDINGS } from '../../constants/index.js';
 import gameContext from '../shared/gameContext.js';
 
-export default class BuildingMenu extends styled.Component`
+export default class BuildingMenu extends (styled.Component`
 	position: fixed;
 	top: 50%;
 	left: 50%;
 	transform: translate(-50%, -50%);
 	background: #1a1a1a;
-	border: 3px solid #FFD700;
+	border: 3px solid #ffd700;
 	padding: 30px;
 	z-index: 1000;
 	max-width: 600px;
@@ -16,7 +16,7 @@ export default class BuildingMenu extends styled.Component`
 	overflow-y: auto;
 
 	& h2 {
-		color: #FFD700;
+		color: #ffd700;
 		margin-bottom: 20px;
 		text-align: center;
 	}
@@ -36,7 +36,7 @@ export default class BuildingMenu extends styled.Component`
 		transition: all 0.2s;
 
 		&:hover {
-			border-color: #FFD700;
+			border-color: #ffd700;
 			transform: translateY(-2px);
 		}
 
@@ -48,12 +48,12 @@ export default class BuildingMenu extends styled.Component`
 
 	& .building-name {
 		font-size: 1.2em;
-		color: #FFD700;
+		color: #ffd700;
 		margin-bottom: 8px;
 	}
 
 	& .building-cost {
-		color: #90EE90;
+		color: #90ee90;
 		font-size: 0.9em;
 		margin: 4px 0;
 	}
@@ -66,14 +66,17 @@ export default class BuildingMenu extends styled.Component`
 		margin-top: 15px;
 		width: 100%;
 	}
-` {
+`) {
+	static schema = {
+		onSelect: {},
+	};
+
 	constructor(options) {
 		super(options);
 		this.onSelect = options.onSelect;
 	}
 
 	build() {
-
 		new Elem({
 			appendTo: this,
 			tag: 'h2',
@@ -86,41 +89,43 @@ export default class BuildingMenu extends styled.Component`
 		new Elem({
 			appendTo: this,
 			className: 'buildings-grid',
-			append: unlockedBuildings.map((buildingType) => {
-				const buildingData = BUILDINGS[buildingType];
-				if (!buildingData) return null;
+			append: unlockedBuildings
+				.map(buildingType => {
+					const buildingData = BUILDINGS[buildingType];
+					if (!buildingData) return null;
 
-				const canAfford = this.canAffordBuilding(buildingData, player);
+					const canAfford = this.canAffordBuilding(buildingData, player);
 
-				const card = new Component({
-					className: `building-card ${!canAfford ? 'disabled' : ''}`,
-					append: [
-						new Elem({
-							className: 'building-name',
-							textContent: buildingData.name,
-						}),
-						new Elem({
-							textContent: buildingData.description,
-							style: { color: '#ccc', fontSize: '0.85em', marginBottom: '10px' },
-						}),
-						...Object.entries(buildingData.cost).map(([resource, amount]) => {
-							const hasEnough = player.resources[resource] >= amount;
-							return new Elem({
-								className: `building-cost ${!hasEnough ? 'insufficient' : ''}`,
-								textContent: `${resource}: ${amount} (have: ${Math.floor(player.resources[resource])})`,
-							});
-						}),
-					],
-					onPointerPress: () => {
-						if (canAfford) {
-							this.onSelect(buildingType);
-							this.destroy();
-						}
-					},
-				});
+					const card = new Component({
+						className: `building-card ${!canAfford ? 'disabled' : ''}`,
+						append: [
+							new Elem({
+								className: 'building-name',
+								textContent: buildingData.name,
+							}),
+							new Elem({
+								textContent: buildingData.description,
+								style: { color: '#ccc', fontSize: '0.85em', marginBottom: '10px' },
+							}),
+							...Object.entries(buildingData.cost).map(([resource, amount]) => {
+								const hasEnough = player.resources[resource] >= amount;
+								return new Elem({
+									className: `building-cost ${!hasEnough ? 'insufficient' : ''}`,
+									textContent: `${resource}: ${amount} (have: ${Math.floor(player.resources[resource])})`,
+								});
+							}),
+						],
+						onPointerPress: () => {
+							if (canAfford) {
+								this.onSelect(buildingType);
+								this.destroy();
+							}
+						},
+					});
 
-				return card;
-			}).filter(Boolean),
+					return card;
+				})
+				.filter(Boolean),
 		});
 
 		new Button({
@@ -132,9 +137,7 @@ export default class BuildingMenu extends styled.Component`
 	}
 
 	canAffordBuilding(buildingData, player) {
-		return Object.entries(buildingData.cost).every(
-			([resource, amount]) => player.resources[resource] >= amount
-		);
+		return Object.entries(buildingData.cost).every(([resource, amount]) => player.resources[resource] >= amount);
 	}
 
 	destroy() {

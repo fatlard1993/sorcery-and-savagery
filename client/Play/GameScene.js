@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import gameContext from '../shared/gameContext.js';
-import { WORLD_CONFIG, TERRAIN_TYPES } from '../../constants/index.js';
+import { WORLD_CONFIG } from '../../constants/index.js';
 import { gridToPxPosition } from '../../utils/index.js';
 import { onPointerDown, onPointerMove, onPointerUp } from './inputs/pointer.js';
 import { onKeyDown } from './inputs/keyboard.js';
@@ -100,25 +100,25 @@ export default class GameScene extends Phaser.Scene {
 		});
 
 		// Create terrain
-		state.world.terrain.forEach((tile) => {
+		state.world.terrain.forEach(tile => {
 			new Terrain(this, tile.x, tile.y, tile.type);
 		});
 
 		console.log('Creating resources:', state.world.resources?.length);
 		// Create resource nodes (from world.resources, not separate resources array)
-		state.world.resources.forEach((resource) => {
+		state.world.resources.forEach(resource => {
 			new Resource(this, resource);
 		});
 
 		console.log('Creating buildings:', state.buildings?.length);
 		// Create buildings
-		state.buildings.forEach((building) => {
+		state.buildings.forEach(building => {
 			new Building(this, building);
 		});
 
 		console.log('Creating units:', state.units?.length);
 		// Create units
-		state.units.forEach((unit) => {
+		state.units.forEach(unit => {
 			new Unit(this, unit);
 		});
 
@@ -131,7 +131,7 @@ export default class GameScene extends Phaser.Scene {
 		const currentPlayer = gameContext.players.currentPlayer;
 		if (currentPlayer) {
 			const townCenter = [...gameContext.buildings.values()].find(
-				(b) => b.playerId === gameContext.playerId && b.type === 'town_center'
+				b => b.playerId === gameContext.playerId && b.type === 'town_center',
 			);
 			if (townCenter) {
 				const pos = gridToPxPosition(townCenter.position);
@@ -147,7 +147,7 @@ export default class GameScene extends Phaser.Scene {
 		this.input.keyboard.on('keydown', onKeyDown);
 
 		// Mouse wheel camera pan
-		this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
+		this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
 			const camera = this.cameras.main;
 			const panSpeed = 2;
 
@@ -165,8 +165,8 @@ export default class GameScene extends Phaser.Scene {
 		});
 
 		// Create selection rectangle (initially hidden)
-		gameContext.selectionRect = this.add.rectangle(0, 0, 0, 0, 0x00FF00, 0.2);
-		gameContext.selectionRect.setStrokeStyle(2, 0x00FF00);
+		gameContext.selectionRect = this.add.rectangle(0, 0, 0, 0, 0x00ff00, 0.2);
+		gameContext.selectionRect.setStrokeStyle(2, 0x00ff00);
 		gameContext.selectionRect.setOrigin(0, 0);
 		gameContext.selectionRect.setVisible(false);
 		gameContext.sceneLayers.ui.add(gameContext.selectionRect);
@@ -176,7 +176,7 @@ export default class GameScene extends Phaser.Scene {
 		console.log('Total game objects:', this.children.list.length);
 	}
 
-	update(time, delta) {
+	update() {
 		// Camera panning with arrow keys or WASD
 		const camera = this.cameras.main;
 		const panSpeed = 10;

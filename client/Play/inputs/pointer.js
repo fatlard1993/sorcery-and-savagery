@@ -1,4 +1,4 @@
-import { throttle } from '../../../utils/index.js';
+import { throttle } from '@vanilla-bean/components';
 import { pxToGridPosition, gridToPxPosition, findPath } from '../../../utils/index.js';
 import { moveUnit, assignTask, placeBuilding } from '../../api/game.js';
 import gameContext from '../../shared/gameContext.js';
@@ -6,7 +6,7 @@ import RadialMenu from '../RadialMenu.js';
 import BuildingMenu from '../BuildingMenu.js';
 import { BUILDINGS } from '../../../constants/index.js';
 
-export const onPointerDown = (pointer) => {
+export const onPointerDown = pointer => {
 	// Ignore if a menu button is being clicked
 	if (gameContext.menuButtonClicked) {
 		console.log('Menu button clicked, ignoring onPointerDown');
@@ -21,7 +21,7 @@ export const onPointerDown = (pointer) => {
 	const unitsLayer = gameContext.sceneLayers.units;
 	console.log('Units layer children:', unitsLayer.list.length);
 
-	const clickedUnit = unitsLayer.list.find((obj) => {
+	const clickedUnit = unitsLayer.list.find(obj => {
 		if (!obj.unitId) return false;
 
 		const bounds = obj.getBounds();
@@ -55,8 +55,8 @@ export const onPointerDown = (pointer) => {
 				clickedUnit.setSelected(false);
 			} else {
 				// Clicking an unselected unit - clear others and select this one
-				gameContext.selectedUnits.forEach((unitId) => {
-					const unit = unitsLayer.list.find((obj) => obj.unitId === unitId);
+				gameContext.selectedUnits.forEach(unitId => {
+					const unit = unitsLayer.list.find(obj => obj.unitId === unitId);
 					if (unit) unit.setSelected(false);
 				});
 				gameContext.selectedUnits.clear();
@@ -70,7 +70,7 @@ export const onPointerDown = (pointer) => {
 	// Check if clicked on building (search in buildings layer)
 	const buildingsLayer = gameContext.sceneLayers.buildings;
 	const clickedBuilding = buildingsLayer.list.find(
-		(obj) => obj.buildingId && obj.getBounds().contains(worldPoint.x, worldPoint.y)
+		obj => obj.buildingId && obj.getBounds().contains(worldPoint.x, worldPoint.y),
 	);
 
 	if (clickedBuilding) {
@@ -88,7 +88,7 @@ export const onPointerDown = (pointer) => {
 	gameContext.selectionRect.setVisible(true);
 };
 
-export const onPointerMove = throttle((pointer) => {
+export const onPointerMove = throttle(pointer => {
 	const worldPoint = gameContext.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
 
 	// Handle building placement ghost
@@ -151,8 +151,8 @@ export const onPointerMove = throttle((pointer) => {
 
 		// Check proximity requirement (except for campfires)
 		if (gameContext.placingBuilding.type !== 'campfire' && isValid) {
-			const completedBuildings = Array.from(gameContext.buildings.values()).filter(b =>
-				b.playerId === gameContext.playerId && b.constructionProgress >= 1.0
+			const completedBuildings = Array.from(gameContext.buildings.values()).filter(
+				b => b.playerId === gameContext.playerId && b.constructionProgress >= 1.0,
 			);
 
 			if (completedBuildings.length === 0) {
@@ -190,7 +190,7 @@ export const onPointerMove = throttle((pointer) => {
 	}
 }, 16);
 
-export const onPointerUp = async (pointer) => {
+export const onPointerUp = async pointer => {
 	// Ignore if a menu button was just clicked
 	if (gameContext.menuButtonClicked) {
 		console.log('Menu button clicked, ignoring onPointerUp');
@@ -220,14 +220,14 @@ export const onPointerUp = async (pointer) => {
 
 			if (!gameContext.scene.input.keyboard.addKey('SHIFT').isDown) {
 				// Clear previous selection before box selecting
-				gameContext.selectedUnits.forEach((unitId) => {
-					const unit = unitsLayer.list.find((obj) => obj.unitId === unitId);
+				gameContext.selectedUnits.forEach(unitId => {
+					const unit = unitsLayer.list.find(obj => obj.unitId === unitId);
 					if (unit) unit.setSelected(false);
 				});
 				gameContext.selectedUnits.clear();
 			}
 
-			unitsLayer.list.forEach((obj) => {
+			unitsLayer.list.forEach(obj => {
 				if (obj.unitId && obj.unitData.playerId === gameContext.playerId) {
 					const objBounds = obj.getBounds();
 					// Check if unit bounds overlap with selection bounds (not just center point)
@@ -325,7 +325,7 @@ export const onPointerUp = async (pointer) => {
 		// Check if clicked on a resource
 		const resourcesLayer = gameContext.sceneLayers.resources;
 		const clickedResource = resourcesLayer.list.find(
-			(obj) => obj.resourceId && obj.getBounds().contains(worldPoint.x, worldPoint.y)
+			obj => obj.resourceId && obj.getBounds().contains(worldPoint.x, worldPoint.y),
 		);
 
 		if (clickedResource) {
@@ -339,7 +339,7 @@ export const onPointerUp = async (pointer) => {
 					label: 'Food',
 					onSelect: () => {
 						console.log('Gather Food action selected');
-						gameContext.selectedUnits.forEach(async (unitId) => {
+						gameContext.selectedUnits.forEach(async unitId => {
 							try {
 								await assignTask({
 									unitId,
@@ -358,7 +358,7 @@ export const onPointerUp = async (pointer) => {
 					label: 'Wood',
 					onSelect: () => {
 						console.log('Chop Wood action selected');
-						gameContext.selectedUnits.forEach(async (unitId) => {
+						gameContext.selectedUnits.forEach(async unitId => {
 							try {
 								await assignTask({
 									unitId,
@@ -378,7 +378,7 @@ export const onPointerUp = async (pointer) => {
 					label: 'Gather',
 					onSelect: () => {
 						console.log('Gather action selected, assigning to units:', gameContext.selectedUnits);
-						gameContext.selectedUnits.forEach(async (unitId) => {
+						gameContext.selectedUnits.forEach(async unitId => {
 							try {
 								console.log('Assigning gather task to unit:', unitId, 'resource:', clickedResource.resourceId);
 								await assignTask({
@@ -399,7 +399,7 @@ export const onPointerUp = async (pointer) => {
 		// Check if clicked on a building
 		const buildingsLayer = gameContext.sceneLayers.buildings;
 		const clickedBuilding = buildingsLayer.list.find(
-			(obj) => obj.buildingId && obj.getBounds().contains(worldPoint.x, worldPoint.y)
+			obj => obj.buildingId && obj.getBounds().contains(worldPoint.x, worldPoint.y),
 		);
 
 		if (clickedBuilding) {
@@ -410,7 +410,7 @@ export const onPointerUp = async (pointer) => {
 					label: 'Build',
 					onSelect: () => {
 						console.log('Build action selected, assigning to units:', gameContext.selectedUnits);
-						gameContext.selectedUnits.forEach(async (unitId) => {
+						gameContext.selectedUnits.forEach(async unitId => {
 							try {
 								console.log('Assigning build task to unit:', unitId, 'building:', clickedBuilding.buildingId);
 								await assignTask({
@@ -436,7 +436,7 @@ export const onPointerUp = async (pointer) => {
 					// Open building selection menu
 					gameContext.activeBuildingMenu = new BuildingMenu({
 						appendTo: document.body,
-						onSelect: async (buildingType) => {
+						onSelect: async buildingType => {
 							// Enter building placement mode
 							gameContext.placingBuilding = {
 								type: buildingType,
@@ -454,7 +454,7 @@ export const onPointerUp = async (pointer) => {
 								size.width * tileSize,
 								size.height * tileSize,
 								0x00ff00,
-								0.3
+								0.3,
 							);
 							gameContext.buildingGhost.setStrokeStyle(2, 0x00ff00);
 							gameContext.buildingGhost.setDepth(999);
@@ -498,11 +498,15 @@ async function executeMove(gridPos) {
 	// Spread units around destination in a formation
 	const units = Array.from(gameContext.selectedUnits);
 	const formationOffsets = [
-		{x: 0, y: 0},
-		{x: -1, y: 0}, {x: 1, y: 0},
-		{x: 0, y: -1}, {x: 0, y: 1},
-		{x: -1, y: -1}, {x: 1, y: -1},
-		{x: -1, y: 1}, {x: 1, y: 1},
+		{ x: 0, y: 0 },
+		{ x: -1, y: 0 },
+		{ x: 1, y: 0 },
+		{ x: 0, y: -1 },
+		{ x: 0, y: 1 },
+		{ x: -1, y: -1 },
+		{ x: 1, y: -1 },
+		{ x: -1, y: 1 },
+		{ x: 1, y: 1 },
 	];
 
 	// Move all selected units
@@ -519,7 +523,7 @@ async function executeMove(gridPos) {
 			};
 
 			// Calculate path from unit's current position
-			const path = findPath(unit.position, destination, (pos) => {
+			const path = findPath(unit.position, destination, pos => {
 				// Check if position is on walkable terrain
 				const terrain = gameContext.serverState.world.terrain.find(t => t.x === pos.x && t.y === pos.y);
 				if (!terrain) return false;

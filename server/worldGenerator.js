@@ -1,5 +1,5 @@
-import { WORLD_CONFIG, TERRAIN_TYPES, RESOURCE_TYPES } from '../constants/index.js';
-import { simpleId } from '../utils/index.js';
+import { simpleId } from '@fatlard1993/web-game-framework/utils';
+import { WORLD_CONFIG, RESOURCE_TYPES } from '../constants/index.js';
 import { DEFAULT_LEVEL, randomInRange } from '../constants/levelConfigs.js';
 import { generatePattern } from './terrainPatterns.js';
 
@@ -19,7 +19,7 @@ export function generateWorld(levelConfig = DEFAULT_LEVEL) {
 	}
 
 	// Generate terrain features using patterns
-	for (const [featureName, featureConfig] of Object.entries(levelConfig.features)) {
+	for (const featureConfig of Object.values(levelConfig.features)) {
 		const count = randomInRange(featureConfig.count);
 
 		for (let i = 0; i < count; i++) {
@@ -57,15 +57,14 @@ export function generateWorld(levelConfig = DEFAULT_LEVEL) {
 				}
 
 				// Check if any resource already occupies this tile
-				if (resources.some((r) => {
-					const size = RESOURCE_TYPES[r.type].size;
-					return (
-						x >= r.position.x &&
-						x < r.position.x + size.width &&
-						y >= r.position.y &&
-						y < r.position.y + size.height
-					);
-				})) {
+				if (
+					resources.some(r => {
+						const size = RESOURCE_TYPES[r.type].size;
+						return (
+							x >= r.position.x && x < r.position.x + size.width && y >= r.position.y && y < r.position.y + size.height
+						);
+					})
+				) {
 					return false;
 				}
 			}

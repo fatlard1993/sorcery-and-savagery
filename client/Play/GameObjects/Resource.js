@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { gridToPxPosition } from '../../../utils/index.js';
 import { RESOURCE_TYPES } from '../../../constants/index.js';
 import gameContext from '../../shared/gameContext.js';
 
@@ -43,7 +42,7 @@ export default class Resource extends Phaser.GameObjects.Container {
 		this.add(this.healthBarBg);
 
 		// Health bar (always visible, shows remaining resources)
-		this.healthBar = scene.add.rectangle(-(displaySize/2), barYOffset, displaySize, 6, 0x00ff00);
+		this.healthBar = scene.add.rectangle(-(displaySize / 2), barYOffset, displaySize, 6, 0x00ff00);
 		this.healthBar.setOrigin(0, 0.5);
 		this.healthBar.setDepth(101);
 		this.add(this.healthBar);
@@ -61,7 +60,7 @@ export default class Resource extends Phaser.GameObjects.Container {
 		this.depletionBarBg.setVisible(false);
 		this.add(this.depletionBarBg);
 
-		this.depletionBar = scene.add.rectangle(-(displaySize/2), depletionYOffset, 0, 4, 0xFF6600);
+		this.depletionBar = scene.add.rectangle(-(displaySize / 2), depletionYOffset, 0, 4, 0xff6600);
 		this.depletionBar.setOrigin(0, 0.5);
 		this.depletionBar.setVisible(false);
 		this.add(this.depletionBar);

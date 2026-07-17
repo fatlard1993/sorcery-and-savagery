@@ -1,40 +1,11 @@
-import { Oxject as Context } from '@vanilla-bean/components';
+import gameContext from '@fatlard1993/web-game-framework/client/gameContext';
 
-// Custom Players map with update helper
-class Players extends Map {
-	update(id, updater = (current) => current) {
-		this.set(id, updater(this.get(id)));
-	}
-
-	get currentPlayer() {
-		return this.get(gameContext.playerId);
-	}
-}
-
-// Custom Units map
-class Units extends Map {
-	update(id, updater = (current) => current) {
-		this.set(id, updater(this.get(id)));
-	}
-}
-
-// Custom Buildings map
-class Buildings extends Map {
-	update(id, updater = (current) => current) {
-		this.set(id, updater(this.get(id)));
-	}
-}
-
-// Game context singleton
-const gameContext = new Context({
-	// Game ID
-	gameId: null,
-	playerId: null,
-
+// The framework context provides gameId, playerId, and players (with currentPlayer);
+// extend it with this game's state
+Object.assign(gameContext, {
 	// Collections
-	players: new Players(),
-	units: new Units(),
-	buildings: new Buildings(),
+	units: new Map(),
+	buildings: new Map(),
 	resources: new Map(),
 
 	// Phaser references

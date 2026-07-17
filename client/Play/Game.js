@@ -1,9 +1,9 @@
-import { styled, Component } from '@vanilla-bean/components';
+import { styled } from '@vanilla-bean/components';
 import Phaser from 'phaser';
 import gameContext from '../shared/gameContext.js';
 import GameScene from './GameScene.js';
 
-export default class Game extends styled.Component`
+export default class Game extends (styled.Component`
 	flex: 1;
 	width: 100%;
 	overflow: hidden;
@@ -13,19 +13,8 @@ export default class Game extends styled.Component`
 		width: 100% !important;
 		height: 100% !important;
 	}
-` {
-	constructor(options = {}) {
-		super(options);
-		console.log('Game component constructor');
-		console.log('this.elem exists:', !!this.elem);
-		console.log('this.elem parent:', this.elem?.parentElement);
-	}
-
+`) {
 	build() {
-		console.log('Game render - creating Phaser');
-		console.log('this.elem:', this.elem);
-		console.log('this.elem in DOM:', document.body.contains(this.elem));
-
 		// Create Phaser game instance after elem is in DOM
 		gameContext.game = new Phaser.Game({
 			type: Phaser.WEBGL,
@@ -42,18 +31,13 @@ export default class Game extends styled.Component`
 			},
 		});
 
-		console.log('Phaser game created');
-
 		// Handle window resize
 		window.addEventListener('resize', this.handleResize);
 	}
 
 	handleResize = () => {
 		if (gameContext.game) {
-			gameContext.game.scale.resize(
-				window.innerWidth,
-				window.innerHeight - 60
-			);
+			gameContext.game.scale.resize(window.innerWidth, window.innerHeight - 60);
 		}
 	};
 

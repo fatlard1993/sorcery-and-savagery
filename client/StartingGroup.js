@@ -7,20 +7,39 @@ const BASE_CLASSES = ['worker', 'warrior', 'archer', 'mage', 'healer'];
 const MAX_UNITS = 7;
 
 const FANTASY_NAMES = [
-	'Aldric', 'Branwen', 'Cael', 'Daveth', 'Elara', 'Finn', 'Gwendolyn',
-	'Haldor', 'Isolde', 'Jorah', 'Kaelin', 'Lyra', 'Maddox', 'Nyx',
-	'Orion', 'Petra', 'Quinn', 'Rowan', 'Soren', 'Thalia', 'Ulric',
-	'Vex', 'Wren', 'Xander', 'Yara', 'Zephyr',
+	'Aldric',
+	'Branwen',
+	'Cael',
+	'Daveth',
+	'Elara',
+	'Finn',
+	'Gwendolyn',
+	'Haldor',
+	'Isolde',
+	'Jorah',
+	'Kaelin',
+	'Lyra',
+	'Maddox',
+	'Nyx',
+	'Orion',
+	'Petra',
+	'Quinn',
+	'Rowan',
+	'Soren',
+	'Thalia',
+	'Ulric',
+	'Vex',
+	'Wren',
+	'Xander',
+	'Yara',
+	'Zephyr',
 ];
 
-/**
- *
- */
 function generateRandomName() {
 	return FANTASY_NAMES[Math.floor(Math.random() * FANTASY_NAMES.length)];
 }
 
-export default class StartingGroup extends styled.Component`
+export default class StartingGroup extends (styled.Component`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -31,7 +50,7 @@ export default class StartingGroup extends styled.Component`
 
 	& h1 {
 		font-size: 2.5em;
-		color: #FFD700;
+		color: #ffd700;
 		margin-bottom: 10px;
 	}
 
@@ -46,7 +65,7 @@ export default class StartingGroup extends styled.Component`
 
 	& .counter {
 		font-size: 1.2em;
-		color: #FFD700;
+		color: #ffd700;
 		margin-bottom: 20px;
 	}
 
@@ -71,7 +90,7 @@ export default class StartingGroup extends styled.Component`
 
 	& .unit-name {
 		font-size: 1.3em;
-		color: #FFD700;
+		color: #ffd700;
 	}
 
 	& .unit-description {
@@ -101,7 +120,7 @@ export default class StartingGroup extends styled.Component`
 
 		&:hover:not(:disabled) {
 			background: #555;
-			border-color: #FFD700;
+			border-color: #ffd700;
 		}
 
 		&:disabled {
@@ -112,19 +131,21 @@ export default class StartingGroup extends styled.Component`
 
 	& .count-display {
 		font-size: 1.5em;
-		color: #FFD700;
+		color: #ffd700;
 		min-width: 30px;
 		text-align: center;
 	}
-` {
-	constructor(options = {}) {
-		super({
-			...options,
-			playerName: generateRandomName(),
-		});
+`) {
+	static schema = {
+		playerName: {},
+	};
 
-		this.playerName = this.options.playerName;
-		console.log('Generated player name:', this.playerName);
+	static prepareOptions(options) {
+		return { playerName: generateRandomName(), ...options };
+	}
+
+	constructor(options = {}) {
+		super(options);
 
 		// Track count of each unit type
 		this.unitCounts = {
@@ -141,16 +162,6 @@ export default class StartingGroup extends styled.Component`
 	}
 
 	build() {
-
-		console.log('Render called, playerName is:', this.playerName);
-
-		// If playerName isn't set yet (because super() triggered render before constructor finished),
-		// use the options value
-		if (!this.playerName && this.options.playerName) {
-			this.playerName = this.options.playerName;
-			console.log('Set playerName from options:', this.playerName);
-		}
-
 		new Elem({
 			appendTo: this,
 			tag: 'h1',
@@ -163,28 +174,16 @@ export default class StartingGroup extends styled.Component`
 			textContent: `Select ${MAX_UNITS} individuals to begin your journey`,
 		});
 
-		console.log('About to create Input with playerName:', this.playerName);
-
 		this.nameInput = new Input({
 			appendTo: this,
 			className: 'player-name-input',
 			label: 'Your Name',
-			placeholder: this.playerName || 'Enter name',
+			placeholder: 'Enter name',
+			value: this.options.playerName,
 			onChange: ({ value }) => {
-				this.playerName = value;
+				this.options.playerName = value;
 				this.updateButton();
 			},
-		});
-
-		// Set the input value after DOM is ready
-		requestAnimationFrame(() => {
-			const inputElem = this.nameInput.elem?.querySelector('input');
-			if (inputElem) {
-				inputElem.value = this.playerName;
-				console.log('Set input value to:', this.playerName);
-			} else {
-				console.error('Could not find input element');
-			}
 		});
 
 		this.counterDisplay = new Elem({
@@ -196,7 +195,7 @@ export default class StartingGroup extends styled.Component`
 		this.unitsContainer = new Elem({
 			appendTo: this,
 			className: 'unit-classes',
-			append: BASE_CLASSES.map((unitType) => this.createUnitCard(unitType)),
+			append: BASE_CLASSES.map(unitType => this.createUnitCard(unitType)),
 		});
 
 		this.confirmButton = new Button({
@@ -217,7 +216,7 @@ export default class StartingGroup extends styled.Component`
 
 	updateButton() {
 		if (this.confirmButton) {
-			const isValid = this.getTotalSelected() === MAX_UNITS && this.playerName.trim().length > 0;
+			const isValid = this.getTotalSelected() === MAX_UNITS && this.options.playerName.trim().length > 0;
 			this.confirmButton.elem.disabled = !isValid;
 		}
 	}
@@ -287,7 +286,7 @@ export default class StartingGroup extends styled.Component`
 
 		const createResult = await createGame({
 			body: {
-				name: `${this.playerName}'s Realm`,
+				name: `${this.options.playerName}'s Realm`,
 				startingUnits,
 			},
 		});
@@ -298,7 +297,7 @@ export default class StartingGroup extends styled.Component`
 		const joinResult = await joinGame({
 			gameId,
 			body: {
-				playerName: this.playerName,
+				playerName: this.options.playerName,
 				startingUnits,
 			},
 		});

@@ -1,26 +1,26 @@
-import { styled, Component } from '@vanilla-bean/components';
-import { onMessage } from '../socket.js';
+import { styled } from '@vanilla-bean/components';
 import gameContext from '../shared/gameContext.js';
 import Game from './Game.js';
 import ResourceHUD from './ResourceHUD.js';
-import socketRouter from './socketRouter/index.js';
+import createSocketRouter from './socketRouter/index.js';
 
-export default class Play extends styled.Component`
+export default class Play extends (styled.Component`
 	display: flex;
 	flex-direction: column;
 	width: 100vw;
 	height: 100vh;
 	background: #1a1a1a;
-` {
+`) {
+	static schema = {
+		gameId: {},
+	};
+
 	constructor(options) {
 		super(options);
-		console.log('Play constructor called with options:', options);
 
 		this.gameId = options.gameId;
 		gameContext.gameId = this.gameId;
 		gameContext.playerId = sessionStorage.getItem('playerId');
-
-		console.log('Will fetch fresh game state from server');
 	}
 
 	async loadGameState() {
@@ -58,8 +58,8 @@ export default class Play extends styled.Component`
 		const loaded = await this.loadGameState();
 		if (!loaded) return; // Stop rendering if game failed to load
 
-		// Set up socket message handler
-		this.socketCleanup = onMessage(socketRouter);
+		// Set up socket message routing
+		this.socketRouter = createSocketRouter();
 
 		// Resource HUD at top
 		this.hud = new ResourceHUD({
@@ -76,8 +76,8 @@ export default class Play extends styled.Component`
 		if (this.game) {
 			this.game.destroy();
 		}
-		if (this.socketCleanup) {
-			this.socketCleanup();
+		if (this.socketRouter) {
+			this.socketRouter.destroy();
 		}
 		super.destroy();
 	}

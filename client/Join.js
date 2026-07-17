@@ -3,7 +3,7 @@ import { STARTING_GROUPS } from '../constants/index.js';
 import { joinGame, getGame } from './api/game.js';
 import gameContext from './shared/gameContext.js';
 
-export default class Join extends styled.Component`
+export default class Join extends (styled.Component`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -13,7 +13,7 @@ export default class Join extends styled.Component`
 
 	& h1 {
 		font-size: 2em;
-		color: #FFD700;
+		color: #ffd700;
 		margin-bottom: 20px;
 	}
 
@@ -33,26 +33,30 @@ export default class Join extends styled.Component`
 		min-width: 200px;
 
 		&:hover {
-			border-color: #FFD700;
+			border-color: #ffd700;
 		}
 
 		&.selected {
-			border-color: #00FF00;
+			border-color: #00ff00;
 			background: #2a3a2a;
 		}
 	}
 
 	& .group-name {
 		font-size: 1.2em;
-		color: #FFD700;
+		color: #ffd700;
 		margin-bottom: 5px;
 	}
 
 	& .group-bonuses {
-		color: #90EE90;
+		color: #90ee90;
 		font-size: 0.8em;
 	}
-` {
+`) {
+	static schema = {
+		gameId: {},
+	};
+
 	constructor(options) {
 		super(options);
 		this.gameId = options.gameId;
@@ -98,7 +102,7 @@ export default class Join extends styled.Component`
 		this.groupsContainer = new Elem({
 			appendTo: this,
 			className: 'groups',
-			append: Object.values(STARTING_GROUPS).map((group) => {
+			append: Object.values(STARTING_GROUPS).map(group => {
 				const card = new Component({
 					className: `group-card ${this.selectedGroup === group.id ? 'selected' : ''}`,
 					append: [
@@ -108,9 +112,7 @@ export default class Join extends styled.Component`
 						}),
 						new Elem({
 							className: 'group-bonuses',
-							append: group.bonuses.map((bonus) =>
-								new Elem({ textContent: `• ${bonus}` })
-							),
+							append: group.bonuses.map(bonus => new Elem({ textContent: `• ${bonus}` })),
 						}),
 					],
 					onPointerPress: () => {

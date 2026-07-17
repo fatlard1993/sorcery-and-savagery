@@ -41,7 +41,7 @@ export default class Unit extends Phaser.GameObjects.Container {
 		this.gatherBarBg.setVisible(false);
 		this.add(this.gatherBarBg);
 
-		this.gatherBar = scene.add.rectangle(-16, -9, 0, 3, 0xFFD700);
+		this.gatherBar = scene.add.rectangle(-16, -9, 0, 3, 0xffd700);
 		this.gatherBar.setOrigin(0, 0.5);
 		this.gatherBar.setVisible(false);
 		this.add(this.gatherBar);
@@ -85,7 +85,6 @@ export default class Unit extends Phaser.GameObjects.Container {
 	}
 
 	updateHealthBar() {
-		const stats = UNITS[this.unitData.type];
 		const healthPercent = this.unitData.health / this.unitData.maxHealth;
 		this.healthBar.width = 32 * healthPercent;
 
@@ -120,7 +119,7 @@ export default class Unit extends Phaser.GameObjects.Container {
 
 	setSelected(selected) {
 		this.unitData.selected = selected;
-		if (selected) this.sprite.setTint(0x00FF00);
+		if (selected) this.sprite.setTint(0x00ff00);
 		else this.sprite.clearTint();
 	}
 
