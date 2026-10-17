@@ -35,8 +35,18 @@ const gameRouter = async (request, server) => {
 			return Response.json({ error: 'Game not found' }, { status: 404 });
 		}
 
-		const { playerName, startingUnits } = await request.json();
-		const player = game.addPlayer(playerName, startingUnits);
+		const { playerName, startingUnits } = await request.json().catch(() => ({}));
+
+		if (
+			typeof playerName !== 'string' ||
+			!playerName.trim() ||
+			!Array.isArray(startingUnits) ||
+			!startingUnits.length
+		) {
+			return Response.json({ error: 'A join needs a playerName and a non-empty startingUnits list' }, { status: 400 });
+		}
+
+		const player = game.addPlayer(playerName.trim(), startingUnits);
 
 		return Response.json({ playerId: player.id, game: game.toClient() }, { status: 201 });
 	}
