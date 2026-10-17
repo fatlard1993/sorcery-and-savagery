@@ -62,7 +62,7 @@ export default class Hub extends (styled.Component`
 			textContent: 'Game Lobby',
 		});
 
-		const { response: games } = await getGames();
+		const { body: games } = await getGames();
 
 		this.gamesList = new Elem({
 			appendTo: this,
@@ -95,10 +95,8 @@ export default class Hub extends (styled.Component`
 					textContent: `${game.playerCount} ${game.playerCount === 1 ? 'player' : 'players'}`,
 				}),
 			],
-			events: {
-				click: () => {
-					window.location.href = `#/join/${game.id}`;
-				},
+			onclick: () => {
+				window.location.href = `#/join/${game.id}`;
 			},
 		});
 	}
