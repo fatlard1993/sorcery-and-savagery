@@ -57,9 +57,13 @@ export default class Join extends (styled.Component`
 		gameId: {},
 	};
 
+	// build() runs inside super(), before any field the constructor sets, so the id is read from the options
+	get gameId() {
+		return this.options.gameId;
+	}
+
 	constructor(options) {
 		super(options);
-		this.gameId = options.gameId;
 		this.selectedGroup = sessionStorage.getItem('startingGroup') || null;
 		this.playerName = sessionStorage.getItem('playerName') || '';
 	}
