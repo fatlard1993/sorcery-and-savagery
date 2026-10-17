@@ -1,4 +1,3 @@
-export { STARTING_GROUPS } from './startingGroups.js';
 export { UNITS } from './units.js';
 export { BUILDINGS } from './buildings.js';
 export { RESOURCE_TYPES, RESOURCE_COLORS } from './resources.js';

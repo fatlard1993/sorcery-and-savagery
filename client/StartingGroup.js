@@ -138,6 +138,8 @@ export default class StartingGroup extends (styled.Component`
 `) {
 	static schema = {
 		playerName: {},
+		// A game to join; without one, confirming creates a new game first
+		gameId: {},
 	};
 
 	static prepareOptions(options) {
@@ -165,7 +167,7 @@ export default class StartingGroup extends (styled.Component`
 		new Elem({
 			appendTo: this,
 			tag: 'h1',
-			textContent: 'Choose Your Starting Party',
+			textContent: this.options.gameId ? 'Join Game' : 'Choose Your Starting Party',
 		});
 
 		new Elem({
@@ -200,7 +202,7 @@ export default class StartingGroup extends (styled.Component`
 
 		this.confirmButton = new Button({
 			appendTo: this,
-			content: 'Begin Your Conquest',
+			content: this.options.gameId ? 'Join Game' : 'Begin Your Conquest',
 			disabled: true,
 			onPointerPress: () => this.confirmSelection(),
 		});
@@ -284,16 +286,17 @@ export default class StartingGroup extends (styled.Component`
 			}
 		});
 
-		const createResult = await createGame({
-			body: {
-				name: `${this.options.playerName}'s Realm`,
-				startingUnits,
-			},
-		});
+		const gameId =
+			this.options.gameId ??
+			(
+				await createGame({
+					body: {
+						name: `${this.options.playerName}'s Realm`,
+						startingUnits,
+					},
+				})
+			).body.gameId;
 
-		const gameId = createResult.body.gameId;
-
-		// Immediately join the game we just created
 		const joinResult = await joinGame({
 			gameId,
 			body: {
