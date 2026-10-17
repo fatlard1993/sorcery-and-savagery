@@ -8,10 +8,7 @@ const gameRouter = async (request, server) => {
 	if (match) {
 		const { name } = await request.json();
 
-		const game = new server.Game({
-			name: name || 'New Game',
-			server,
-		});
+		const game = server.createGame({ name: name || 'New Game' });
 
 		return Response.json({ gameId: game.id }, { status: 201 });
 	}
