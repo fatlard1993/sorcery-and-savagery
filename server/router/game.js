@@ -1,4 +1,4 @@
-import { requestMatch } from '@fatlard1993/web-game-framework/utils';
+import { requestMatch } from '@vanilla-bean/components/app';
 
 const gameRouter = async (request, server) => {
 	let match;
