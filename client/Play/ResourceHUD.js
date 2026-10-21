@@ -1,39 +1,55 @@
-import { styled, Elem } from '@vanilla-bean/components';
+import { styled, Component, Elem } from '@vanilla-bean/components';
 import { RESOURCE_COLORS } from '../../constants/index.js';
 import gameContext from '../shared/gameContext.js';
+import { gold } from '../shared/ui.js';
 
-export default class ResourceHUD extends (styled.Component`
-	display: flex;
-	justify-content: space-around;
-	align-items: center;
-	padding: 10px 20px;
-	background: rgba(0, 0, 0, 0.8);
-	border-bottom: 2px solid #444;
-	height: 60px;
-
-	& .resource {
+// Game.js sizes the canvas to the window less this bar's 60px, so the bar keeps that height and wraps inside it
+export default class ResourceHUD extends styled(
+	Component,
+	({ colors, space, radius, media }) => `
 		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-around;
 		align-items: center;
-		gap: 8px;
-		font-size: 1.1em;
-	}
+		align-content: center;
+		gap: 2px ${space.lg};
+		box-sizing: border-box;
+		height: 60px;
+		flex-shrink: 0;
+		padding: ${space.xs} ${space.md};
+		overflow: hidden;
+		background-color: ${colors.surface};
+		border-bottom: 1px solid ${colors.border};
 
-	& .resource-icon {
-		width: 20px;
-		height: 20px;
-		border-radius: 3px;
-	}
+		@media ${media.phone} {
+			gap: 2px ${space.md};
+			font-size: 0.85em;
+		}
 
-	& .resource-amount {
-		color: #ffd700;
-		font-weight: bold;
-		min-width: 60px;
-	}
+		& .resource {
+			display: flex;
+			align-items: center;
+			gap: ${space.sm};
+			font-size: 1.1em;
+		}
 
-	& .population {
-		color: #fff;
-	}
-`) {
+		& .resource-icon {
+			width: 1em;
+			height: 1em;
+			border-radius: ${radius.sm};
+		}
+
+		& .resource-amount {
+			color: ${gold(colors)};
+			font-weight: 600;
+			min-width: 2.5em;
+		}
+
+		& .population {
+			color: ${colors.white};
+		}
+	`,
+) {
 	build() {
 		// Update every second
 		this.updateInterval = setInterval(() => this.updateResources(), 1000);

@@ -1,16 +1,10 @@
-import { styled } from '@vanilla-bean/components';
+import { Notify, View } from '@vanilla-bean/components';
 import gameContext from '../shared/gameContext.js';
 import Game from './Game.js';
 import ResourceHUD from './ResourceHUD.js';
 import createSocketRouter from './socketRouter/index.js';
 
-export default class Play extends (styled.Component`
-	display: flex;
-	flex-direction: column;
-	width: 100vw;
-	height: 100vh;
-	background: #1a1a1a;
-`) {
+export default class Play extends View {
 	static schema = {
 		gameId: {},
 	};
@@ -31,7 +25,7 @@ export default class Play extends (styled.Component`
 
 			// Check if request failed
 			if (result.status !== 'success') {
-				console.error('Game not found');
+				new Notify({ type: 'error', content: 'Game not found' });
 				window.location.href = '#/';
 				return false;
 			}
@@ -40,7 +34,7 @@ export default class Play extends (styled.Component`
 			console.log('Loaded fresh game state:', gameContext.serverState);
 			return true;
 		} catch (error) {
-			console.error('Failed to load game:', error);
+			new Notify({ type: 'error', content: `Couldn't load the game: ${error.message}` });
 			// Redirect to home if game doesn't exist
 			window.location.href = '#/';
 			return false;

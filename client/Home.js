@@ -1,63 +1,69 @@
-import { styled, Button, Elem } from '@vanilla-bean/components';
+import { styled, Button, Content, Elem, Toolbar, View } from '@vanilla-bean/components';
 
-export default class Home extends (styled.Component`
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	height: 100vh;
-	gap: 20px;
+import { gold } from './shared/ui.js';
 
-	& h1 {
-		font-size: 3em;
-		color: #ffd700;
-		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-		margin-bottom: 20px;
-	}
+export default class Home extends styled(
+	View,
+	({ colors, space }) => `
+		& > .variant-bar > .heading {
+			color: ${gold(colors)};
+		}
 
-	& .subtitle {
-		font-size: 1.2em;
-		color: #aaa;
-		margin-bottom: 40px;
-	}
+		& .splash {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: ${space.lg};
+			min-height: 100%;
+			padding: ${space.xl} ${space.lg};
+			text-align: center;
+		}
 
-	& .button-group {
-		display: flex;
-		flex-direction: column;
-		gap: 15px;
-	}
-`) {
+		& .subtitle {
+			color: ${colors.muted};
+		}
+
+		& .button-group {
+			display: flex;
+			flex-direction: column;
+			gap: ${space.sm};
+			min-width: 200px;
+		}
+	`,
+) {
 	build() {
-		this.title = new Elem({
-			appendTo: this,
-			tag: 'h1',
-			textContent: 'Sorcery & Savagery',
-		});
+		new Toolbar({ appendTo: this, variant: 'bar', heading: 'Sorcery & Savagery' });
 
-		this.subtitle = new Elem({
+		new Content({
 			appendTo: this,
-			className: 'subtitle',
-			textContent: 'A Medieval Fantasy RTS',
-		});
-
-		this.buttonGroup = new Elem({
-			appendTo: this,
-			className: 'button-group',
-			append: [
-				new Button({
-					content: 'New Game',
-					onPointerPress: () => {
-						window.location.href = '#/starting-group';
-					},
-				}),
-				new Button({
-					content: 'Game Lobby',
-					onPointerPress: () => {
-						window.location.href = '#/hub';
-					},
-				}),
-			],
+			append: new Elem({
+				className: 'splash',
+				append: [
+					new Elem({
+						className: 'subtitle',
+						textContent: 'A Medieval Fantasy RTS',
+					}),
+					new Elem({
+						className: 'button-group',
+						append: [
+							new Button({
+								content: 'New Game',
+								onPointerPress: () => {
+									window.location.href = '#/starting-group';
+								},
+							}),
+							new Button({
+								content: 'Game Lobby',
+								variant: 'flat',
+								onPointerPress: () => {
+									window.location.href = '#/hub';
+								},
+							}),
+						],
+					}),
+				],
+			}),
 		});
 	}
 }

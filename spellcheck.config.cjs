@@ -31,6 +31,7 @@ module.exports = {
 		'mage',
 		'mages',
 		'minify',
+		'minmax',
 		'nyx',
 		'obx',
 		'oby',

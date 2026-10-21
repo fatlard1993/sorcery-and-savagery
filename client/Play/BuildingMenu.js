@@ -1,93 +1,63 @@
-import { styled, Component, Button, Elem } from '@vanilla-bean/components';
+import { styled, Dialog, Elem } from '@vanilla-bean/components';
 import { BUILDINGS } from '../../constants/index.js';
 import gameContext from '../shared/gameContext.js';
+import { CardButton, gold } from '../shared/ui.js';
 
-export default class BuildingMenu extends (styled.Component`
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	background: #1a1a1a;
-	border: 3px solid #ffd700;
-	padding: 30px;
-	z-index: 1000;
-	max-width: 600px;
-	max-height: 80vh;
-	overflow-y: auto;
-
-	& h2 {
-		color: #ffd700;
-		margin-bottom: 20px;
-		text-align: center;
-	}
-
-	& .buildings-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-		gap: 15px;
-		margin-bottom: 20px;
-	}
-
-	& .building-card {
-		border: 2px solid #444;
-		padding: 15px;
-		background: #222;
-		cursor: pointer;
-		transition: all 0.2s;
-
-		&:hover {
-			border-color: #ffd700;
-			transform: translateY(-2px);
+export default class BuildingMenu extends styled(
+	Dialog,
+	({ colors, space }) => `
+		& .buildings-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+			gap: ${space.sm};
 		}
 
-		&.disabled {
-			opacity: 0.5;
-			cursor: not-allowed;
+		& .building-name {
+			font-size: 1.1em;
+			color: ${gold(colors)};
+			margin-bottom: ${space.xs};
 		}
-	}
 
-	& .building-name {
-		font-size: 1.2em;
-		color: #ffd700;
-		margin-bottom: 8px;
-	}
+		& .building-description {
+			color: ${colors.muted};
+			font-size: 0.85em;
+			margin-bottom: ${space.sm};
+		}
 
-	& .building-cost {
-		color: #90ee90;
-		font-size: 0.9em;
-		margin: 4px 0;
-	}
+		& .building-cost {
+			color: ${colors.light(colors.success)};
+			font-size: 0.9em;
+			margin: 2px 0;
+		}
 
-	& .building-cost.insufficient {
-		color: #ff6666;
-	}
-
-	& .close-button {
-		margin-top: 15px;
-		width: 100%;
-	}
-`) {
+		& .building-cost.insufficient {
+			color: ${colors.light(colors.danger)};
+		}
+	`,
+) {
 	static schema = {
 		onSelect: {},
 	};
 
 	constructor(options) {
-		super(options);
+		super({
+			size: 'fit',
+			header: 'Select Building to Construct',
+			buttons: ['Cancel'],
+			onButtonPress: () => this.close(),
+			...options,
+		});
 		this.onSelect = options.onSelect;
 	}
 
 	build() {
-		new Elem({
-			appendTo: this,
-			tag: 'h2',
-			textContent: 'Select Building to Construct',
-		});
+		super.build();
 
 		const player = gameContext.players.get(gameContext.playerId);
 		const unlockedBuildings = player?.techTree?.unlocked || [];
 
 		new Elem({
-			appendTo: this,
+			appendTo: this.body,
 			className: 'buildings-grid',
 			append: unlockedBuildings
 				.map(buildingType => {
@@ -96,16 +66,16 @@ export default class BuildingMenu extends (styled.Component`
 
 					const canAfford = this.canAffordBuilding(buildingData, player);
 
-					const card = new Component({
-						className: `building-card ${!canAfford ? 'disabled' : ''}`,
+					return new CardButton({
+						disabled: !canAfford,
 						append: [
 							new Elem({
 								className: 'building-name',
 								textContent: buildingData.name,
 							}),
 							new Elem({
+								className: 'building-description',
 								textContent: buildingData.description,
-								style: { color: '#ccc', fontSize: '0.85em', marginBottom: '10px' },
 							}),
 							...Object.entries(buildingData.cost).map(([resource, amount]) => {
 								const hasEnough = player.resources[resource] >= amount;
@@ -118,21 +88,12 @@ export default class BuildingMenu extends (styled.Component`
 						onPointerPress: () => {
 							if (canAfford) {
 								this.onSelect(buildingType);
-								this.destroy();
+								this.close();
 							}
 						},
 					});
-
-					return card;
 				})
 				.filter(Boolean),
-		});
-
-		new Button({
-			appendTo: this,
-			className: 'close-button',
-			content: 'Cancel',
-			onPointerPress: () => this.destroy(),
 		});
 	}
 
@@ -141,14 +102,8 @@ export default class BuildingMenu extends (styled.Component`
 	}
 
 	destroy() {
-		// Clear the active menu reference
-		if (gameContext.activeBuildingMenu === this) {
-			gameContext.activeBuildingMenu = null;
-		}
+		if (gameContext.activeBuildingMenu === this) gameContext.activeBuildingMenu = null;
 
-		// Remove from DOM
-		if (this.elem && this.elem.parentNode) {
-			this.elem.parentNode.removeChild(this.elem);
-		}
+		super.destroy();
 	}
 }

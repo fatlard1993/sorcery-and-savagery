@@ -1,90 +1,64 @@
-import { styled, Button, Elem } from '@vanilla-bean/components';
+import { styled, Button, Card, Content, Elem, EmptyState, Toolbar, View } from '@vanilla-bean/components';
+
 import { getGames } from './api/game.js';
+import { gold } from './shared/ui.js';
 
-export default class Hub extends (styled.Component`
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding: 40px;
-	height: 100vh;
-
-	& h1 {
-		font-size: 2.5em;
-		color: #ffd700;
-		margin-bottom: 30px;
-	}
-
-	& .games-list {
-		width: 100%;
-		max-width: 600px;
-		margin-bottom: 20px;
-	}
-
-	& .game-item {
-		background: #222;
-		border: 2px solid #444;
-		padding: 15px;
-		margin: 10px 0;
-		cursor: pointer;
-		transition: all 0.2s;
-
-		&:hover {
-			border-color: #ffd700;
-			transform: translateX(5px);
+export default class Hub extends styled(
+	View,
+	({ colors, space }) => `
+		& > .variant-bar > .heading {
+			color: ${gold(colors)};
 		}
-	}
 
-	& .game-name {
-		font-size: 1.2em;
-		color: #ffd700;
-		margin-bottom: 5px;
-	}
+		& .games-list {
+			display: flex;
+			flex-direction: column;
+			gap: ${space.sm};
+			padding: ${space.lg} 0;
+		}
 
-	& .game-info {
-		color: #aaa;
-		font-size: 0.9em;
-	}
+		& .game-name {
+			font-size: 1.1em;
+			color: ${gold(colors)};
+			margin-bottom: ${space.xs};
+		}
 
-	& .no-games {
-		color: #888;
-		font-style: italic;
-		margin: 40px 0;
-	}
-`) {
+		& .game-info {
+			color: ${colors.muted};
+			font-size: 0.9em;
+		}
+	`,
+) {
 	build() {
+		new Toolbar({
+			appendTo: this,
+			variant: 'bar',
+			heading: 'Game Lobby',
+			append: new Button({
+				content: 'Create New Game',
+				onPointerPress: () => {
+					window.location.href = '#/starting-group';
+				},
+			}),
+		});
+
+		this.content = new Content({ appendTo: this, column: 600 });
+
 		this._init();
 	}
 
 	async _init() {
-		new Elem({
-			appendTo: this,
-			tag: 'h1',
-			textContent: 'Game Lobby',
-		});
-
 		const { body: games } = await getGames();
 
-		this.gamesList = new Elem({
-			appendTo: this,
-			className: 'games-list',
-			append:
-				games.length === 0
-					? [new Elem({ className: 'no-games', textContent: 'No active games. Create one!' })]
-					: games.map(game => this.createGameItem(game)),
-		});
-
-		new Button({
-			appendTo: this,
-			content: 'Create New Game',
-			onPointerPress: () => {
-				window.location.href = '#/starting-group';
-			},
-		});
+		this.content.append(
+			games.length === 0
+				? new EmptyState({ icon: 'chess-rook', title: 'No active games', message: 'Create one to start a realm.' })
+				: new Elem({ className: 'games-list', append: games.map(game => this.createGameItem(game)) }),
+		);
 	}
 
 	createGameItem(game) {
-		return new Elem({
-			className: 'game-item',
+		return new Card({
 			append: [
 				new Elem({
 					className: 'game-name',
@@ -95,7 +69,7 @@ export default class Hub extends (styled.Component`
 					textContent: `${game.playerCount} ${game.playerCount === 1 ? 'player' : 'players'}`,
 				}),
 			],
-			onclick: () => {
+			onPointerPress: () => {
 				window.location.href = `#/join/${game.id}`;
 			},
 		});

@@ -1,7 +1,8 @@
-import { styled, Component, Button, Elem, Input } from '@vanilla-bean/components';
+import { styled, Button, Card, Content, Elem, Input, Label, Toolbar, View } from '@vanilla-bean/components';
 import { UNITS } from '../constants/index.js';
 import { createGame, joinGame } from './api/game.js';
 import gameContext from './shared/gameContext.js';
+import { gold } from './shared/ui.js';
 
 const BASE_CLASSES = ['worker', 'warrior', 'archer', 'mage', 'healer'];
 const MAX_UNITS = 7;
@@ -39,103 +40,80 @@ function generateRandomName() {
 	return FANTASY_NAMES[Math.floor(Math.random() * FANTASY_NAMES.length)];
 }
 
-export default class StartingGroup extends (styled.Component`
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding: 40px;
-	height: 100vh;
-	overflow-y: auto;
-	width: 100%;
-
-	& h1 {
-		font-size: 2.5em;
-		color: #ffd700;
-		margin-bottom: 10px;
-	}
-
-	& .subtitle {
-		color: #aaa;
-		margin-bottom: 20px;
-	}
-
-	& .player-name-input {
-		margin-bottom: 30px;
-	}
-
-	& .counter {
-		font-size: 1.2em;
-		color: #ffd700;
-		margin-bottom: 20px;
-	}
-
-	& .unit-classes {
-		display: flex;
-		gap: 20px;
-		margin-bottom: 30px;
-		flex-wrap: wrap;
-		justify-content: center;
-	}
-
-	& .unit-card {
-		border: 3px solid #444;
-		padding: 20px;
-		background: #222;
-		min-width: 180px;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 10px;
-	}
-
-	& .unit-name {
-		font-size: 1.3em;
-		color: #ffd700;
-	}
-
-	& .unit-description {
-		color: #ccc;
-		font-size: 0.85em;
-		text-align: center;
-		margin-bottom: 10px;
-	}
-
-	& .unit-counter {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-	}
-
-	& .count-button {
-		width: 30px;
-		height: 30px;
-		background: #444;
-		border: 2px solid #666;
-		color: #fff;
-		cursor: pointer;
-		font-size: 1.2em;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-
-		&:hover:not(:disabled) {
-			background: #555;
-			border-color: #ffd700;
+export default class StartingGroup extends styled(
+	View,
+	({ colors, space }) => `
+		& > .variant-bar > .heading {
+			color: ${gold(colors)};
 		}
 
-		&:disabled {
-			opacity: 0.3;
-			cursor: not-allowed;
+		& .party {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: ${space.lg};
+			padding: ${space.lg} 0 ${space.xl};
+			text-align: center;
 		}
-	}
 
-	& .count-display {
-		font-size: 1.5em;
-		color: #ffd700;
-		min-width: 30px;
-		text-align: center;
-	}
-`) {
+		& .subtitle {
+			color: ${colors.muted};
+		}
+
+		& .player-name-input {
+			width: 100%;
+			max-width: 320px;
+			text-align: left;
+
+			& input {
+				width: 100%;
+				box-sizing: border-box;
+			}
+		}
+
+		& .counter {
+			font-size: 1.1em;
+			color: ${gold(colors)};
+		}
+
+		& .unit-classes {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+			gap: ${space.md};
+			width: 100%;
+		}
+
+		& .unit-card {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: ${space.sm};
+		}
+
+		& .unit-name {
+			font-size: 1.15em;
+			color: ${gold(colors)};
+		}
+
+		& .unit-description {
+			flex: 1;
+			color: ${colors.muted};
+			font-size: 0.85em;
+		}
+
+		& .unit-counter {
+			display: flex;
+			align-items: center;
+			gap: ${space.md};
+		}
+
+		& .count-display {
+			font-size: 1.4em;
+			color: ${gold(colors)};
+			min-width: 30px;
+		}
+	`,
+) {
 	static schema = {
 		playerName: {},
 		// A game to join; without one, confirming creates a new game first
@@ -164,22 +142,23 @@ export default class StartingGroup extends (styled.Component`
 	}
 
 	build() {
-		new Elem({
+		new Toolbar({
 			appendTo: this,
-			tag: 'h1',
-			textContent: this.options.gameId ? 'Join Game' : 'Choose Your Starting Party',
+			variant: 'bar',
+			heading: this.options.gameId ? 'Join Game' : 'Choose Your Starting Party',
 		});
 
+		const party = new Elem({ className: 'party' });
+
+		new Content({ appendTo: this, column: 960, append: party });
+
 		new Elem({
-			appendTo: this,
+			appendTo: party,
 			className: 'subtitle',
 			textContent: `Select ${MAX_UNITS} individuals to begin your journey`,
 		});
 
 		this.nameInput = new Input({
-			appendTo: this,
-			className: 'player-name-input',
-			label: 'Your Name',
 			placeholder: 'Enter name',
 			value: this.options.playerName,
 			onChange: ({ value }) => {
@@ -188,20 +167,22 @@ export default class StartingGroup extends (styled.Component`
 			},
 		});
 
+		new Label({ appendTo: party, addClass: 'player-name-input', label: 'Your Name', append: this.nameInput });
+
 		this.counterDisplay = new Elem({
-			appendTo: this,
+			appendTo: party,
 			className: 'counter',
 			textContent: `Selected: 0 / ${MAX_UNITS}`,
 		});
 
 		this.unitsContainer = new Elem({
-			appendTo: this,
+			appendTo: party,
 			className: 'unit-classes',
 			append: BASE_CLASSES.map(unitType => this.createUnitCard(unitType)),
 		});
 
 		this.confirmButton = new Button({
-			appendTo: this,
+			appendTo: party,
 			content: this.options.gameId ? 'Join Game' : 'Begin Your Conquest',
 			disabled: true,
 			onPointerPress: () => this.confirmSelection(),
@@ -232,8 +213,8 @@ export default class StartingGroup extends (styled.Component`
 			textContent: '0',
 		});
 
-		const card = new Component({
-			className: 'unit-card',
+		const card = new Card({
+			addClass: 'unit-card',
 			append: [
 				new Elem({
 					className: 'unit-name',
@@ -243,12 +224,12 @@ export default class StartingGroup extends (styled.Component`
 					className: 'unit-description',
 					textContent: unitData.description,
 				}),
-				new Component({
+				new Elem({
 					className: 'unit-counter',
 					append: [
 						new Button({
-							className: 'count-button',
-							content: '-',
+							icon: 'minus',
+							attributes: { 'aria-label': `One fewer ${unitData.name}` },
 							onPointerPress: () => {
 								if (this.unitCounts[unitType] > 0) {
 									this.unitCounts[unitType]--;
@@ -259,8 +240,8 @@ export default class StartingGroup extends (styled.Component`
 						}),
 						countDisplay,
 						new Button({
-							className: 'count-button',
-							content: '+',
+							icon: 'plus',
+							attributes: { 'aria-label': `One more ${unitData.name}` },
 							onPointerPress: () => {
 								if (this.getTotalSelected() < MAX_UNITS) {
 									this.unitCounts[unitType]++;
