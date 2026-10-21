@@ -1004,9 +1004,11 @@ export default class Game extends BaseGame {
 			}
 		}
 
+		delete player.pendingSpawn;
+
 		this.broadcast('playerJoined', { player });
 
-		return player;
+		return { success: true, player };
 	}
 
 	toClient() {
