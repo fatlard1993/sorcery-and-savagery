@@ -1,7 +1,7 @@
 import { homedir } from 'os';
 import { join } from 'path';
 
-import Argi from 'argi';
+import Argi from 'argi-cli';
 
 import { Server } from '@fatlard1993/web-game-framework';
 

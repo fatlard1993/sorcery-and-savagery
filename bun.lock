@@ -8,7 +8,7 @@
         "@fatlard1993/web-game-framework": "github:fatlard1993/web-game-framework#ec2769a",
         "@vanilla-bean/components": "^5.0.0",
         "@vanilla-bean/hypertether": "^1.1.1",
-        "argi": "github:fatlard1993/argi#785979e",
+        "argi-cli": "^1.0.0",
         "phaser": "^3.90.0",
       },
       "devDependencies": {
@@ -142,7 +142,7 @@
 
     "are-docs-informative": ["are-docs-informative@0.0.2", "", {}, "sha512-ixiS0nLNNG5jNQzgZJNoUpBKdo9yTYZMGJ+QgT2jmjR7G7+QHRCc4v6LQ3NgE7EBJq+o0ams3waJwkrlBom8Ig=="],
 
-    "argi": ["argi@github:fatlard1993/argi#785979e", {}, "fatlard1993-argi-785979e", "sha512-SnNyf2+zbgxOFQG2omI5+1cM6e4KTLnRqlVZaEt6VxofdaIpvdMbQUeRXVlTr9DcB7Kl51HCnc61AT0gchZCPQ=="],
+    "argi-cli": ["argi-cli@1.0.0", "", {}, "sha512-0iupCg+eh7zx/yoz2fAQZ8PfLDboRPpzs5PFHWb9Wfdmr/n6e9Pe9oJ6bPhyg4aU2A4DoJiNSAFHIp0C6/iA0A=="],
 
     "aria-query": ["aria-query@5.3.0", "", { "dependencies": { "dequal": "^2.0.3" } }, "sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A=="],
 
