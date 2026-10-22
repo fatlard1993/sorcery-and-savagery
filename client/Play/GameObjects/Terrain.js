@@ -1,3 +1,4 @@
+import { randFromArray } from '@vanilla-bean/components';
 import Phaser from 'phaser';
 import { gridToPxPosition } from '../../../utils/index.js';
 import { TERRAIN_TYPES } from '../../../constants/index.js';
@@ -20,7 +21,7 @@ export default class Terrain extends Phaser.GameObjects.Container {
 
 		// Pick random variant
 		const frames = TERRAIN_FRAME_MAP[type] || [0];
-		const frame = frames[Math.floor(Math.random() * frames.length)];
+		const frame = randFromArray(frames);
 
 		// Create sprite
 		this.sprite = scene.add.sprite(0, 0, 'ground', frame);

@@ -3,7 +3,7 @@
  * Each function takes a terrain grid and modifies it in place
  */
 
-import { randomInRange } from '../constants/levelConfigs.js';
+import { randFromArray, randInt } from '@vanilla-bean/components/utils';
 
 /**
  * Get a terrain tile at x, y coordinates
@@ -56,8 +56,8 @@ function inBounds(x, y, width, height) {
  * @param config
  */
 export function generateRiver(terrain, width, height, config) {
-	const riverWidth = randomInRange(config.width);
-	const riverLength = randomInRange(config.length);
+	const riverWidth = randInt(...config.width);
+	const riverLength = randInt(...config.length);
 
 	// Start from a random edge
 	const startSide = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
@@ -118,7 +118,7 @@ export function generateRiver(terrain, width, height, config) {
 export function generateOrganicShape(terrain, width, height, config) {
 	const centerX = Math.floor(Math.random() * width);
 	const centerY = Math.floor(Math.random() * height);
-	const radius = randomInRange(config.size);
+	const radius = randInt(...config.size);
 
 	// Use multiple circles with varying radii for organic shape
 	const numCircles = 5 + Math.floor(Math.random() * 5);
@@ -152,7 +152,7 @@ export function generateOrganicShape(terrain, width, height, config) {
 export function generateClusteredShape(terrain, width, height, config) {
 	const centerX = Math.floor(Math.random() * width);
 	const centerY = Math.floor(Math.random() * height);
-	const size = randomInRange(config.size);
+	const size = randInt(...config.size);
 
 	// Create cluster using random walk
 	let x = centerX;
@@ -201,7 +201,7 @@ export function generateClusteredShape(terrain, width, height, config) {
  * @param config
  */
 export function generateNearWaterShape(terrain, width, height, config) {
-	const size = randomInRange(config.size);
+	const size = randInt(...config.size);
 
 	// Find a random water tile
 	const waterTiles = [];
@@ -220,7 +220,7 @@ export function generateNearWaterShape(terrain, width, height, config) {
 	}
 
 	// Pick a random water tile
-	const waterTile = waterTiles[Math.floor(Math.random() * waterTiles.length)];
+	const waterTile = randFromArray(waterTiles);
 
 	// Place tiles adjacent to this water tile
 	for (let i = 0; i < size; i++) {
@@ -236,7 +236,7 @@ export function generateNearWaterShape(terrain, width, height, config) {
 			{ dx: 1, dy: 1 },
 		];
 
-		const dir = directions[Math.floor(Math.random() * directions.length)];
+		const dir = randFromArray(directions);
 		const x = waterTile.x + dir.dx;
 		const y = waterTile.y + dir.dy;
 

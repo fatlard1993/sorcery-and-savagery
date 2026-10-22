@@ -1,3 +1,4 @@
+import { randInt } from '@vanilla-bean/components';
 import Phaser from 'phaser';
 import { gridToPxPosition } from '../../../utils/index.js';
 import { BUILDINGS, PLAYER_COLORS } from '../../../constants/index.js';
@@ -17,7 +18,7 @@ export default class Building extends Phaser.GameObjects.Container {
 		// Create sprite
 		// For house, pick random variant (0, 1, or 2)
 		if (buildingData.type === 'house') {
-			const frame = Math.floor(Math.random() * 3);
+			const frame = randInt(0, 2);
 			this.sprite = scene.add.sprite(0, 0, buildingData.type, frame);
 		} else {
 			this.sprite = scene.add.image(0, 0, buildingData.type);

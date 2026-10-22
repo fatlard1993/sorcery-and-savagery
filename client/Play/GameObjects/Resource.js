@@ -1,3 +1,4 @@
+import { randFromArray } from '@vanilla-bean/components';
 import Phaser from 'phaser';
 import { RESOURCE_TYPES } from '../../../constants/index.js';
 import gameContext from '../../shared/gameContext.js';
@@ -22,10 +23,7 @@ export default class Resource extends Phaser.GameObjects.Container {
 		this.hasBeenGathered = false; // Track if gathering has started
 
 		// Pick random variant (0, 1, or 2) - skip frame 1 for water
-		let frame = Math.floor(Math.random() * 3);
-		if (resourceData.resourceType === 'water' && frame === 1) {
-			frame = Math.random() < 0.5 ? 0 : 2; // Use 0 or 2 instead
-		}
+		const frame = randFromArray(resourceData.resourceType === 'water' ? [0, 2] : [0, 1, 2]);
 
 		// Create sprite
 		this.sprite = scene.add.sprite(0, 0, resourceData.type, frame);

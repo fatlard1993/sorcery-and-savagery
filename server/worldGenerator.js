@@ -1,6 +1,7 @@
 import { simpleId } from '@fatlard1993/web-game-framework/utils';
+import { randInt } from '@vanilla-bean/components/utils';
 import { WORLD_CONFIG, RESOURCE_TYPES } from '../constants/index.js';
-import { DEFAULT_LEVEL, randomInRange } from '../constants/levelConfigs.js';
+import { DEFAULT_LEVEL } from '../constants/levelConfigs.js';
 import { generatePattern } from './terrainPatterns.js';
 
 /**
@@ -20,7 +21,7 @@ export function generateWorld(levelConfig = DEFAULT_LEVEL) {
 
 	// Generate terrain features using patterns
 	for (const featureConfig of Object.values(levelConfig.features)) {
-		const count = randomInRange(featureConfig.count);
+		const count = randInt(...featureConfig.count);
 
 		for (let i = 0; i < count; i++) {
 			generatePattern(terrain, WORLD_CONFIG.width, WORLD_CONFIG.height, featureConfig.pattern, featureConfig);
@@ -75,7 +76,7 @@ export function generateWorld(levelConfig = DEFAULT_LEVEL) {
 	// Generate resources based on level config
 	if (levelConfig.resources.forests) {
 		const forestConfig = levelConfig.resources.forests;
-		const numClusters = randomInRange(forestConfig.clusters);
+		const numClusters = randInt(...forestConfig.clusters);
 
 		for (let cluster = 0; cluster < numClusters; cluster++) {
 			// Pick random center for cluster (with 5-tile margin from edges)
@@ -84,7 +85,7 @@ export function generateWorld(levelConfig = DEFAULT_LEVEL) {
 			const centerY = margin + Math.floor(Math.random() * (WORLD_CONFIG.height - margin * 2));
 
 			// Place resources in cluster
-			const clusterSize = randomInRange(forestConfig.clusterSize);
+			const clusterSize = randInt(...forestConfig.clusterSize);
 
 			for (let i = 0; i < clusterSize; i++) {
 				// Random position near cluster center
@@ -131,7 +132,7 @@ export function generateWorld(levelConfig = DEFAULT_LEVEL) {
 	// Stone deposits
 	if (levelConfig.resources.stoneDeposits) {
 		const stoneConfig = levelConfig.resources.stoneDeposits;
-		const numClusters = randomInRange(stoneConfig.clusters);
+		const numClusters = randInt(...stoneConfig.clusters);
 
 		for (let cluster = 0; cluster < numClusters; cluster++) {
 			let centerX = Math.floor(Math.random() * WORLD_CONFIG.width);
@@ -148,7 +149,7 @@ export function generateWorld(levelConfig = DEFAULT_LEVEL) {
 				}
 			}
 
-			const clusterSize = randomInRange(stoneConfig.clusterSize);
+			const clusterSize = randInt(...stoneConfig.clusterSize);
 
 			for (let i = 0; i < clusterSize; i++) {
 				const x = centerX + Math.floor((Math.random() - 0.5) * 8);
@@ -193,7 +194,7 @@ export function generateWorld(levelConfig = DEFAULT_LEVEL) {
 	// Water sources
 	if (levelConfig.resources.waterSources) {
 		const waterConfig = levelConfig.resources.waterSources;
-		const count = randomInRange(waterConfig.count);
+		const count = randInt(...waterConfig.count);
 
 		for (let i = 0; i < count; i++) {
 			let x = Math.floor(Math.random() * WORLD_CONFIG.width);

@@ -1,4 +1,15 @@
-import { styled, Button, Card, Content, Elem, Input, Label, Toolbar, View } from '@vanilla-bean/components';
+import {
+	styled,
+	Button,
+	Card,
+	Content,
+	Elem,
+	Input,
+	Label,
+	randFromArray,
+	Toolbar,
+	View,
+} from '@vanilla-bean/components';
 import { UNITS } from '../constants/index.js';
 import { createGame, joinGame } from './api/game.js';
 import gameContext from './shared/gameContext.js';
@@ -37,7 +48,7 @@ const FANTASY_NAMES = [
 ];
 
 function generateRandomName() {
-	return FANTASY_NAMES[Math.floor(Math.random() * FANTASY_NAMES.length)];
+	return randFromArray(FANTASY_NAMES);
 }
 
 export default class StartingGroup extends styled(
