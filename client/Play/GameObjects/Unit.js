@@ -20,7 +20,6 @@ export default class Unit extends Phaser.GameObjects.Container {
 		// Store player color
 		const playerIndex = [...gameContext.players.keys()].indexOf(unitData.playerId);
 		this.playerColor = PLAYER_COLORS[playerIndex] || 0xffffff;
-		// this.sprite.setTint(this.playerColor);
 
 		// Health bar background (positioned lower to stay within grid space)
 		this.healthBarBg = scene.add.rectangle(0, -13, 32, 3, 0x000000);
@@ -87,15 +86,6 @@ export default class Unit extends Phaser.GameObjects.Container {
 	updateHealthBar() {
 		const healthPercent = this.unitData.health / this.unitData.maxHealth;
 		this.healthBar.width = 32 * healthPercent;
-
-		// Color based on health
-		// if (healthPercent > 0.6) {
-		// 	this.healthBar.setFillStyle(0x00FF00);
-		// } else if (healthPercent > 0.3) {
-		// 	this.healthBar.setFillStyle(0xFFFF00);
-		// } else {
-		// 	this.healthBar.setFillStyle(0xFF0000);
-		// }
 	}
 
 	updateGatherProgress() {

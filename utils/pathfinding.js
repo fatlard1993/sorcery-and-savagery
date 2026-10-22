@@ -111,14 +111,3 @@ function keyToPos(key) {
 	const [x, y] = key.split(',').map(Number);
 	return { x, y };
 }
-
-/**
- *
- * @param start
- * @param goal
- * @param isWalkable
- */
-export function isPathClear(start, goal, isWalkable) {
-	const path = findPath(start, goal, isWalkable);
-	return path.length > 0;
-}

@@ -143,31 +143,6 @@ export function generateOrganicShape(terrain, width, height, config) {
 }
 
 /**
- * Generate a radial/circular shape (ponds)
- * @param terrain
- * @param width
- * @param height
- * @param config
- */
-export function generateRadialShape(terrain, width, height, config) {
-	const centerX = Math.floor(Math.random() * width);
-	const centerY = Math.floor(Math.random() * height);
-	const radius = randomInRange(config.size);
-
-	// Fill circle
-	for (let dx = -radius; dx <= radius; dx++) {
-		for (let dy = -radius; dy <= radius; dy++) {
-			if (dx * dx + dy * dy <= radius * radius) {
-				const x = centerX + dx;
-				const y = centerY + dy;
-
-				setTile(terrain, width, height, x, y, config.terrain);
-			}
-		}
-	}
-}
-
-/**
  * Generate a clustered pattern (mountains, forests)
  * @param terrain
  * @param width
@@ -215,30 +190,6 @@ export function generateClusteredShape(terrain, width, height, config) {
 		// Keep in bounds
 		x = Math.max(0, Math.min(width - 1, x));
 		y = Math.max(0, Math.min(height - 1, y));
-	}
-}
-
-/**
- * Generate a scattered pattern (dirt patches)
- * @param terrain
- * @param width
- * @param height
- * @param config
- */
-export function generateScatteredShape(terrain, width, height, config) {
-	const centerX = Math.floor(Math.random() * width);
-	const centerY = Math.floor(Math.random() * height);
-	const size = randomInRange(config.size);
-
-	// Place random tiles in a wider area
-	const numTiles = size * 2;
-	const spread = size * 2;
-
-	for (let i = 0; i < numTiles; i++) {
-		const x = centerX + Math.floor((Math.random() - 0.5) * spread);
-		const y = centerY + Math.floor((Math.random() - 0.5) * spread);
-
-		setTile(terrain, width, height, x, y, config.terrain);
 	}
 }
 
@@ -315,14 +266,8 @@ export function generatePattern(terrain, width, height, pattern, config) {
 		case 'organic':
 			generateOrganicShape(terrain, width, height, config);
 			break;
-		case 'radial':
-			generateRadialShape(terrain, width, height, config);
-			break;
 		case 'clustered':
 			generateClusteredShape(terrain, width, height, config);
-			break;
-		case 'scattered':
-			generateScatteredShape(terrain, width, height, config);
 			break;
 		case 'near_water':
 			generateNearWaterShape(terrain, width, height, config);

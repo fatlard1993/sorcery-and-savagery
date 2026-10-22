@@ -29,7 +29,6 @@ export default class Building extends Phaser.GameObjects.Container {
 		// Player color tint
 		const playerIndex = [...gameContext.players.keys()].indexOf(buildingData.playerId);
 		const playerColor = PLAYER_COLORS[playerIndex] || 0xffffff;
-		// this.sprite.setTint(playerColor);
 
 		// Health bar background
 		this.healthBarBg = scene.add.rectangle(0, -stats.size.height * 16 - 10, stats.size.width * 32, 4, 0x000000);
@@ -96,15 +95,6 @@ export default class Building extends Phaser.GameObjects.Container {
 		const stats = BUILDINGS[this.buildingData.type];
 		const healthPercent = this.buildingData.health / this.buildingData.maxHealth;
 		this.healthBar.width = stats.size.width * 32 * healthPercent;
-
-		// Color based on health
-		// if (healthPercent > 0.6) {
-		// 	this.healthBar.setFillStyle(0x00FF00);
-		// } else if (healthPercent > 0.3) {
-		// 	this.healthBar.setFillStyle(0xFFFF00);
-		// } else {
-		// 	this.healthBar.setFillStyle(0xFF0000);
-		// }
 	}
 
 	updateConstruction(progress) {
