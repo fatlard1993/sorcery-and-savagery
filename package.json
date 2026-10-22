@@ -34,10 +34,7 @@
 		"@vanilla-bean/components": "^5.0.0",
 		"@vanilla-bean/hypertether": "^1.1.1",
 		"argi": "github:fatlard1993/argi#785979e",
-		"emoji-js": "^3.9.0",
-		"marked": "^16.4.2",
-		"phaser": "^3.90.0",
-		"qrcode": "^1.5.4"
+		"phaser": "^3.90.0"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.1.0",
