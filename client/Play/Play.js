@@ -31,7 +31,6 @@ export default class Play extends View {
 			}
 
 			gameContext.serverState = result.body;
-			console.log('Loaded fresh game state:', gameContext.serverState);
 			return true;
 		} catch (error) {
 			new Notify({ type: 'error', content: `Couldn't load the game: ${error.message}` });
@@ -46,8 +45,6 @@ export default class Play extends View {
 	}
 
 	async _init() {
-		console.log('Play _init() called');
-
 		// Load fresh game state before initializing
 		const loaded = await this.loadGameState();
 		if (!loaded) return; // Stop rendering if game failed to load
