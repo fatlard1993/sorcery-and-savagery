@@ -38,6 +38,7 @@ export default class GameScene extends Phaser.Scene {
 		});
 
 		// Load building images
+		this.load.image('campfire', '/assets/buildings/campfire.png');
 		this.load.image('town_center', '/assets/buildings/town_center.png');
 		this.load.spritesheet('house', '/assets/buildings/house.png', {
 			frameWidth: 64,
