@@ -5,6 +5,7 @@ import GameScene from './GameScene.js';
 
 export default class Game extends (styled.Component`
 	flex: 1;
+	min-height: 0;
 	width: 100%;
 	overflow: hidden;
 
@@ -20,7 +21,7 @@ export default class Game extends (styled.Component`
 			type: Phaser.WEBGL,
 			parent: this.elem,
 			width: window.innerWidth,
-			height: window.innerHeight - 60,
+			height: window.innerHeight,
 			scene: GameScene,
 			backgroundColor: '#1a1a1a',
 			physics: {
@@ -31,18 +32,15 @@ export default class Game extends (styled.Component`
 			},
 		});
 
-		// Handle window resize
-		window.addEventListener('resize', this.handleResize);
+		// The canvas fills what the view leaves it, under the toolbar and the resource bar
+		this.resizeObserver = new ResizeObserver(([{ contentRect }]) => {
+			if (contentRect.height) gameContext.game?.scale.resize(contentRect.width, contentRect.height);
+		});
+		this.resizeObserver.observe(this.elem);
 	}
 
-	handleResize = () => {
-		if (gameContext.game) {
-			gameContext.game.scale.resize(window.innerWidth, window.innerHeight - 60);
-		}
-	};
-
 	destroy() {
-		window.removeEventListener('resize', this.handleResize);
+		this.resizeObserver?.disconnect();
 		if (gameContext.game) {
 			gameContext.game.destroy(true);
 			gameContext.game = null;

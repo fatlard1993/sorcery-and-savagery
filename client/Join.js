@@ -1,17 +1,21 @@
-import StartingGroup from './StartingGroup.js';
-import { getGame } from './api/game.js';
+import { styled } from '@vanilla-bean/components';
+import { Join as BaseJoin } from '@fatlard1993/web-game-framework/ui/GameRoom';
 
-// Joining picks a starting party the same way creating does, then joins the game in the route instead of a new one
-export default class Join extends StartingGroup {
-	get gameId() {
-		return this.options.gameId;
-	}
+import { fantasyName } from './shared/names.js';
+import { goldHeading } from './shared/ui.js';
 
-	build() {
-		super.build();
-
-		getGame({ gameId: this.gameId }).then(({ response }) => {
-			if (!response?.ok) window.location.href = '#/';
-		});
+// Joining names the player; the starting party is chosen next, before play
+export default class Join extends styled(BaseJoin, goldHeading) {
+	constructor(options, ...children) {
+		super(
+			{
+				formData: { name: localStorage.getItem('lastName') || fantasyName() },
+				formInputs: [{ key: 'name', label: 'Your Name', validations: [[/\S/, 'Required']] }],
+				playUrl: `#/party/${options.gameId}`,
+				...options,
+				toolbar: { heading: 'Join Game', backText: 'Lobby', joinText: 'Join' },
+			},
+			...children,
+		);
 	}
 }

@@ -914,42 +914,67 @@ export default class Game extends BaseGame {
 		return true;
 	}
 
-	addPlayer(name, startingUnits) {
-		const id = simpleId();
-
-		// Calculate starting resources based on unit composition
-		// More workers = more starting resources, more combatants = less
-		const workerCount = startingUnits.filter(u => u.type === 'worker').length;
-		const resourceMultiplier = 1 + workerCount * 0.15; // +15% per worker
-
-		const player = {
-			id,
-			name,
-			resources: {
-				wood: Math.floor(200 * resourceMultiplier),
-				stone: Math.floor(150 * resourceMultiplier),
-				iron: Math.floor(100 * resourceMultiplier),
-				water: Math.floor(100 * resourceMultiplier),
-				food: Math.floor(150 * resourceMultiplier),
-			},
-			population: { current: 0, max: 50 }, // Start with population cap of 50
+	// A player joins with a name, then chooses a starting party
+	onPlayerAdded(player) {
+		Object.assign(player, {
+			resources: { wood: 200, stone: 150, iron: 100, water: 100, food: 150 },
+			population: { current: 0, max: 50 },
 			techTree: {
 				level: 1,
 				unlocked: ['house', 'barracks', 'archery_range', 'tower'],
 			},
-		};
+			choosingParty: true,
+		});
+	}
 
-		this.players.set(id, player);
+	chooseStartingParty(playerId, startingUnits) {
+		const player = this.players.get(playerId);
+		if (!player?.choosingParty) {
+			return { success: false, error: 'Player not found or party already chosen' };
+		}
 
-		// Store starting units - player will choose spawn location
+		if (!Array.isArray(startingUnits) || !startingUnits.length || !startingUnits.every(unit => UNITS[unit?.type])) {
+			return { success: false, error: 'A starting party is a non-empty list of units' };
+		}
+
+		// More workers = more starting resources: +15% per worker
+		const workerCount = startingUnits.filter(u => u.type === 'worker').length;
+		const resourceMultiplier = 1 + workerCount * 0.15;
+
+		for (const resource of Object.keys(player.resources)) {
+			player.resources[resource] = Math.floor(player.resources[resource] * resourceMultiplier);
+		}
+
+		delete player.choosingParty;
+
+		// The player chooses a spawn location next
 		player.pendingSpawn = {
-			startingUnits,
+			startingUnits: startingUnits.map(({ type }) => ({ type })),
 			needsLocationChoice: true,
 		};
 
 		this.broadcast('playerJoined', { player });
 
-		return player;
+		return { success: true, player };
+	}
+
+	// A player who leaves takes their units and buildings with them
+	onPlayerRemoved(playerId) {
+		for (const unit of [...this.units.values()]) {
+			if (unit.playerId !== playerId) continue;
+
+			this.unitSpatialGrid.remove(unit);
+			this.units.delete(unit.id);
+			this.broadcast('unitDestroyed', { unitId: unit.id });
+		}
+
+		for (const building of [...this.buildings.values()]) {
+			if (building.playerId !== playerId) continue;
+
+			this.buildingSpatialGrid.remove(building);
+			this.buildings.delete(building.id);
+			this.broadcast('buildingDestroyed', { buildingId: building.id });
+		}
 	}
 
 	// Called when player chooses their spawn location

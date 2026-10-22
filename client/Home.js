@@ -47,7 +47,7 @@ export default class Home extends styled(
 					new Elem({
 						className: 'button-group',
 						append: [
-							new Link({ textContent: 'New Game', href: '#/starting-group', variant: 'button' }),
+							new Link({ textContent: 'New Game', href: '#/create', variant: 'button' }),
 							new Link({ textContent: 'Game Lobby', href: '#/hub' }),
 						],
 					}),

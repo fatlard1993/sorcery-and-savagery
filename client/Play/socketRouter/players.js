@@ -6,6 +6,16 @@ import gameContext from '../../shared/gameContext.js';
  */
 export default function players(data) {
 	switch (data.update) {
+		case 'addPlayer': {
+			gameContext.players.set(data.newPlayer.id, data.newPlayer);
+			break;
+		}
+
+		case 'removePlayer': {
+			gameContext.players.delete(data.id);
+			break;
+		}
+
 		case 'playerJoined': {
 			gameContext.players.set(data.player.id, data.player);
 			console.log(`Player joined: ${data.player.name}`);

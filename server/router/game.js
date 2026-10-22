@@ -3,67 +3,26 @@ import { requestMatch } from '@vanilla-bean/components/app';
 const gameRouter = async (request, server) => {
 	let match;
 
-	// Create new game
-	match = requestMatch('POST', '/api/games', request);
-	if (match) {
-		const { name } = await request.json();
-
-		const game = server.createGame({ name: name || 'New Game' });
-
-		return Response.json({ gameId: game.id }, { status: 201 });
-	}
-
-	// Get all games
-	match = requestMatch('GET', '/api/games', request);
-	if (match) {
-		const games = Object.values(server.games)
-			.filter(g => g)
-			.map(game => ({
-				id: game.id,
-				name: game.name,
-				playerCount: game.players.size,
-			}));
-
-		return Response.json(games);
-	}
-
-	// Join game
-	match = requestMatch('POST', '/api/games/:gameId/join', request);
+	// Choose the starting party, once, after joining
+	match = requestMatch('POST', '/games/:gameId/players/:playerId/starting-party', request);
 	if (match) {
 		const game = server.games[match.gameId];
 		if (!game) {
 			return Response.json({ error: 'Game not found' }, { status: 404 });
 		}
 
-		const { playerName, startingUnits } = await request.json().catch(() => ({}));
+		const { startingUnits } = await request.json();
+		const result = game.chooseStartingParty(match.playerId, startingUnits);
 
-		if (
-			typeof playerName !== 'string' ||
-			!playerName.trim() ||
-			!Array.isArray(startingUnits) ||
-			!startingUnits.length
-		) {
-			return Response.json({ error: 'A join needs a playerName and a non-empty startingUnits list' }, { status: 400 });
+		if (!result.success) {
+			return Response.json({ error: result.error }, { status: 400 });
 		}
 
-		const player = game.addPlayer(playerName.trim(), startingUnits);
-
-		return Response.json({ playerId: player.id, game: game.toClient() }, { status: 201 });
-	}
-
-	// Get game state
-	match = requestMatch('GET', '/api/games/:gameId', request);
-	if (match) {
-		const game = server.games[match.gameId];
-		if (!game) {
-			return Response.json({ error: 'Game not found' }, { status: 404 });
-		}
-
-		return Response.json(game.toClient());
+		return Response.json(result.player);
 	}
 
 	// Move unit
-	match = requestMatch('POST', '/api/games/:gameId/players/:playerId/units/:unitId/move', request);
+	match = requestMatch('POST', '/games/:gameId/players/:playerId/units/:unitId/move', request);
 	if (match) {
 		const game = server.games[match.gameId];
 		if (!game) {
@@ -98,7 +57,7 @@ const gameRouter = async (request, server) => {
 	}
 
 	// Place building
-	match = requestMatch('POST', '/api/games/:gameId/players/:playerId/buildings', request);
+	match = requestMatch('POST', '/games/:gameId/players/:playerId/buildings', request);
 	if (match) {
 		const game = server.games[match.gameId];
 		if (!game) {
@@ -116,7 +75,7 @@ const gameRouter = async (request, server) => {
 	}
 
 	// Queue unit production
-	match = requestMatch('POST', '/api/games/:gameId/players/:playerId/buildings/:buildingId/produce', request);
+	match = requestMatch('POST', '/games/:gameId/players/:playerId/buildings/:buildingId/produce', request);
 	if (match) {
 		const game = server.games[match.gameId];
 		if (!game) {
@@ -144,7 +103,7 @@ const gameRouter = async (request, server) => {
 	}
 
 	// Assign task to unit (gather resource or build)
-	match = requestMatch('POST', '/api/games/:gameId/players/:playerId/units/:unitId/task', request);
+	match = requestMatch('POST', '/games/:gameId/players/:playerId/units/:unitId/task', request);
 	if (match) {
 		const game = server.games[match.gameId];
 		if (!game) {
@@ -216,7 +175,7 @@ const gameRouter = async (request, server) => {
 	}
 
 	// Choose spawn location
-	match = requestMatch('POST', '/api/games/:gameId/players/:playerId/spawn', request);
+	match = requestMatch('POST', '/games/:gameId/players/:playerId/spawn', request);
 	if (match) {
 		const game = server.games[match.gameId];
 		if (!game) {

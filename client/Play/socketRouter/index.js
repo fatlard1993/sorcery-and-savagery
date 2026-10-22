@@ -7,7 +7,7 @@ import players from './players.js';
 // Registration is explicit per event: a 'unit*' pattern would send
 // unitProduced to the units handler, but it belongs to the buildings handler
 const handlerEvents = {
-	players: ['playerJoined', 'playerResourcesUpdated', 'playerDefeated'],
+	players: ['addPlayer', 'removePlayer', 'playerJoined', 'playerResourcesUpdated', 'playerDefeated'],
 	units: [
 		'unitSpawned',
 		'unitMove',

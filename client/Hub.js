@@ -1,77 +1,31 @@
-import { styled, Button, Card, Content, Elem, EmptyState, Toolbar, View } from '@vanilla-bean/components';
+import { Link, styled } from '@vanilla-bean/components';
+import { Hub as BaseHub } from '@fatlard1993/web-game-framework/ui/GameRoom';
 
-import { getGames } from './api/game.js';
-import { gold } from './shared/ui.js';
+import { goldHeading } from './shared/ui.js';
 
+// The lobby has no watching view, so a game's Watch link goes
 export default class Hub extends styled(
-	View,
-	({ colors, space }) => `
-		& > .variant-bar > .heading {
-			color: ${gold(colors)};
-		}
+	BaseHub,
+	theme => `
+		${goldHeading(theme)}
 
-		& .games-list {
-			display: flex;
-			flex-direction: column;
-			gap: ${space.sm};
-			padding: ${space.lg} 0;
-		}
-
-		& .game-name {
-			font-size: 1.1em;
-			color: ${gold(colors)};
-			margin-bottom: ${space.xs};
-		}
-
-		& .game-info {
-			color: ${colors.muted};
-			font-size: 0.9em;
+		& a[href^="#/watch/"] {
+			display: none;
 		}
 	`,
 ) {
-	build() {
-		new Toolbar({
-			appendTo: this,
-			variant: 'bar',
-			heading: 'Game Lobby',
-			append: new Button({
-				content: 'Create New Game',
-				onPointerPress: () => {
-					window.location.href = '#/starting-group';
+	constructor(options, ...children) {
+		super(
+			{
+				...options,
+				toolbar: {
+					heading: 'Game Lobby',
+					left: [new Link({ textContent: 'Home', href: '#/', variant: 'button' })],
+					createText: 'New Game',
 				},
-			}),
-		});
-
-		this.content = new Content({ appendTo: this, column: 600 });
-
-		this._init();
-	}
-
-	async _init() {
-		const { body: games } = await getGames();
-
-		this.content.append(
-			games.length === 0
-				? new EmptyState({ icon: 'chess-rook', title: 'No active games', message: 'Create one to start a realm.' })
-				: new Elem({ className: 'games-list', append: games.map(game => this.createGameItem(game)) }),
-		);
-	}
-
-	createGameItem(game) {
-		return new Card({
-			append: [
-				new Elem({
-					className: 'game-name',
-					textContent: game.name,
-				}),
-				new Elem({
-					className: 'game-info',
-					textContent: `${game.playerCount} ${game.playerCount === 1 ? 'player' : 'players'}`,
-				}),
-			],
-			onPointerPress: () => {
-				window.location.href = `#/join/${game.id}`;
+				noGamesMessage: 'No active games. Create one to start a realm.',
 			},
-		});
+			...children,
+		);
 	}
 }

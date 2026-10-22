@@ -3,7 +3,7 @@ import { RESOURCE_COLORS } from '../../constants/index.js';
 import gameContext from '../shared/gameContext.js';
 import { gold } from '../shared/ui.js';
 
-// Game.js sizes the canvas to the window less this bar's 60px, so the bar keeps that height and wraps inside it
+// The bar keeps one height, wrapping inside it, so the map below it doesn't jump
 export default class ResourceHUD extends styled(
 	Component,
 	({ colors, space, radius, media }) => `

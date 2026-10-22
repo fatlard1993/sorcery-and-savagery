@@ -1,55 +1,11 @@
-import {
-	styled,
-	Button,
-	Card,
-	Content,
-	Elem,
-	Input,
-	Label,
-	randFromArray,
-	Toolbar,
-	View,
-} from '@vanilla-bean/components';
+import { styled, Button, Card, Content, Elem, Notify, Toolbar, View } from '@vanilla-bean/components';
+import { failureReason } from '@vanilla-bean/hypertether';
 import { UNITS } from '../constants/index.js';
-import { createGame, joinGame } from './api/game.js';
-import gameContext from './shared/gameContext.js';
+import { chooseStartingParty, getGame } from './api/game.js';
 import { gold } from './shared/ui.js';
 
 const BASE_CLASSES = ['worker', 'warrior', 'archer', 'mage', 'healer'];
 const MAX_UNITS = 7;
-
-const FANTASY_NAMES = [
-	'Aldric',
-	'Branwen',
-	'Cael',
-	'Daveth',
-	'Elara',
-	'Finn',
-	'Gwendolyn',
-	'Haldor',
-	'Isolde',
-	'Jorah',
-	'Kaelin',
-	'Lyra',
-	'Maddox',
-	'Nyx',
-	'Orion',
-	'Petra',
-	'Quinn',
-	'Rowan',
-	'Soren',
-	'Thalia',
-	'Ulric',
-	'Vex',
-	'Wren',
-	'Xander',
-	'Yara',
-	'Zephyr',
-];
-
-function generateRandomName() {
-	return randFromArray(FANTASY_NAMES);
-}
 
 export default class StartingGroup extends styled(
 	View,
@@ -69,17 +25,6 @@ export default class StartingGroup extends styled(
 
 		& .subtitle {
 			color: ${colors.muted};
-		}
-
-		& .player-name-input {
-			width: 100%;
-			max-width: 320px;
-			text-align: left;
-
-			& input {
-				width: 100%;
-				box-sizing: border-box;
-			}
 		}
 
 		& .counter {
@@ -126,14 +71,9 @@ export default class StartingGroup extends styled(
 	`,
 ) {
 	static schema = {
-		playerName: {},
-		// A game to join; without one, confirming creates a new game first
+		// The game joined; the party is this tab's player in it
 		gameId: {},
 	};
-
-	static prepareOptions(options) {
-		return { playerName: generateRandomName(), ...options };
-	}
 
 	constructor(options = {}) {
 		super(options);
@@ -153,11 +93,9 @@ export default class StartingGroup extends styled(
 	}
 
 	build() {
-		new Toolbar({
-			appendTo: this,
-			variant: 'bar',
-			heading: this.options.gameId ? 'Join Game' : 'Choose Your Starting Party',
-		});
+		this.playerId = localStorage.getItem(this.options.gameId);
+
+		new Toolbar({ appendTo: this, variant: 'bar', heading: 'Choose Your Starting Party' });
 
 		const party = new Elem({ className: 'party' });
 
@@ -168,17 +106,6 @@ export default class StartingGroup extends styled(
 			className: 'subtitle',
 			textContent: `Select ${MAX_UNITS} individuals to begin your journey`,
 		});
-
-		this.nameInput = new Input({
-			placeholder: 'Enter name',
-			value: this.options.playerName,
-			onChange: ({ value }) => {
-				this.options.playerName = value;
-				this.updateButton();
-			},
-		});
-
-		new Label({ appendTo: party, addClass: 'player-name-input', label: 'Your Name', append: this.nameInput });
 
 		this.counterDisplay = new Elem({
 			appendTo: party,
@@ -194,10 +121,35 @@ export default class StartingGroup extends styled(
 
 		this.confirmButton = new Button({
 			appendTo: party,
-			content: this.options.gameId ? 'Join Game' : 'Begin Your Conquest',
+			content: 'Begin Your Conquest',
 			disabled: true,
 			onPointerPress: () => this.confirmSelection(),
 		});
+
+		this._checkPlayer();
+	}
+
+	// Only a player of this game still choosing has a party to pick; anyone else goes where they belong
+	async _checkPlayer() {
+		const { gameId } = this.options;
+
+		if (!this.playerId) {
+			window.location.href = `#/join/${gameId}`;
+			return;
+		}
+
+		const game = await getGame(gameId, { cache: false });
+
+		if (game.status !== 'success') {
+			new Notify({ type: 'error', content: failureReason(game) });
+			window.location.href = '#/hub';
+			return;
+		}
+
+		const player = game.body.players.find(({ id }) => id === this.playerId);
+
+		if (!player) window.location.href = `#/join/${gameId}`;
+		else if (!player.choosingParty) window.location.href = `#/play/${gameId}`;
 	}
 
 	updateCounter() {
@@ -210,8 +162,7 @@ export default class StartingGroup extends styled(
 
 	updateButton() {
 		if (this.confirmButton) {
-			const isValid = this.getTotalSelected() === MAX_UNITS && this.options.playerName.trim().length > 0;
-			this.confirmButton.elem.disabled = !isValid;
+			this.confirmButton.elem.disabled = this.getTotalSelected() !== MAX_UNITS;
 		}
 	}
 
@@ -278,35 +229,14 @@ export default class StartingGroup extends styled(
 			}
 		});
 
-		const gameId =
-			this.options.gameId ??
-			(
-				await createGame({
-					body: {
-						name: `${this.options.playerName}'s Realm`,
-						startingUnits,
-					},
-				})
-			).body.gameId;
+		const { gameId } = this.options;
+		const chosen = await chooseStartingParty({ gameId, playerId: this.playerId, startingUnits });
 
-		const joinResult = await joinGame({
-			gameId,
-			body: {
-				playerName: this.options.playerName,
-				startingUnits,
-			},
-		});
+		if (chosen.status !== 'success') {
+			new Notify({ type: 'error', content: failureReason(chosen) });
+			return;
+		}
 
-		// Store in game context
-		gameContext.gameId = gameId;
-		gameContext.playerId = joinResult.body.playerId;
-		gameContext.serverState = joinResult.body.game;
-
-		// Store in sessionStorage to persist across navigation
-		sessionStorage.setItem('gameId', gameId);
-		sessionStorage.setItem('playerId', joinResult.body.playerId);
-
-		// Navigate directly to game
 		window.location.href = `#/play/${gameId}`;
 	}
 }

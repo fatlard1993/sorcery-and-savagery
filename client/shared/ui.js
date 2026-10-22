@@ -27,3 +27,15 @@ export const CardButton = styled(
 	`,
 	{ tag: 'button' },
 );
+
+/**
+ * A view's toolbar heading in the game's gold
+ * @param {object} theme - The theme
+ * @param {object} theme.colors - The theme's colors
+ * @returns {string} The styles
+ */
+export const goldHeading = ({ colors }) => `
+	& > .variant-bar > .heading {
+		color: ${gold(colors)};
+	}
+`;
