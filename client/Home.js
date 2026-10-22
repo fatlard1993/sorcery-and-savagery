@@ -1,4 +1,4 @@
-import { styled, Button, Content, Elem, Toolbar, View } from '@vanilla-bean/components';
+import { styled, Content, Elem, Link, Toolbar, View } from '@vanilla-bean/components';
 
 import { gold } from './shared/ui.js';
 
@@ -47,19 +47,8 @@ export default class Home extends styled(
 					new Elem({
 						className: 'button-group',
 						append: [
-							new Button({
-								content: 'New Game',
-								onPointerPress: () => {
-									window.location.href = '#/starting-group';
-								},
-							}),
-							new Button({
-								content: 'Game Lobby',
-								variant: 'flat',
-								onPointerPress: () => {
-									window.location.href = '#/hub';
-								},
-							}),
+							new Link({ textContent: 'New Game', href: '#/starting-group', variant: 'button' }),
+							new Link({ textContent: 'Game Lobby', href: '#/hub' }),
 						],
 					}),
 				],
