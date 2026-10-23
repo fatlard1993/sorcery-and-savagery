@@ -5,7 +5,7 @@
     "": {
       "name": "sorcery-and-savagery",
       "dependencies": {
-        "@fatlard1993/web-game-framework": "github:fatlard1993/web-game-framework#bb92658",
+        "@fatlard1993/web-game-framework": "github:fatlard1993/web-game-framework#9a9d36f",
         "@vanilla-bean/components": "^6.1.0",
         "@vanilla-bean/hypertether": "^1.2.0",
         "argi-cli": "^1.0.0",
@@ -64,7 +64,7 @@
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.7.2", "", { "dependencies": { "@eslint/core": "^1.2.1", "levn": "^0.4.1" } }, "sha512-+CNAzxglkrpNf/kKywqQfk74QjtceuOE7Qm+AF8miRvPF/wmmK5+OJOgVh3AVTT3RP2mH3+FOaxlE5v72owk0A=="],
 
-    "@fatlard1993/web-game-framework": ["@fatlard1993/web-game-framework@github:fatlard1993/web-game-framework#bb92658", { "dependencies": { "lowdb": "^7.0.1", "nanoid": "^6.0.0", "qrcode": "^1.5.4" }, "peerDependencies": { "@vanilla-bean/components": "^6.0.0", "@vanilla-bean/hypertether": "^1.2.0" } }, "fatlard1993-web-game-framework-bb92658", "sha512-p/d4/z7LNcoci59hRNfyP+Il0686/p20SqS49QYsZ51D0cJsrOCMwd/AUfPzn2Rf4UGfyQo8CMcN4mBs7f+Y9w=="],
+    "@fatlard1993/web-game-framework": ["@fatlard1993/web-game-framework@github:fatlard1993/web-game-framework#9a9d36f", { "dependencies": { "lowdb": "^7.0.1", "nanoid": "^6.0.0", "qrcode": "^1.5.4" }, "peerDependencies": { "@vanilla-bean/components": "^6.0.0", "@vanilla-bean/hypertether": "^1.2.0" } }, "fatlard1993-web-game-framework-9a9d36f", "sha512-ErMGrn6cxYMNeiFlDhTXFfZOddOZlvL3RRbnhyBelOe5KoakZDlSJTXQwPVZNwadgvYkLd5TG/ypdSyrQdIypA=="],
 
     "@fontsource-variable/kode-mono": ["@fontsource-variable/kode-mono@5.2.8", "", {}, "sha512-X1O4RAIPyP4Vm8rVoKHirg3amVdE2XvIAQUvDRU17aCzSUz648/9w2KJafH1vK6g0uy7U8PrOCc1I11riXhHwQ=="],
 
