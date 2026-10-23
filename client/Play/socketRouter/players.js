@@ -18,7 +18,6 @@ export default function players(data) {
 
 		case 'playerJoined': {
 			gameContext.players.set(data.player.id, data.player);
-			console.log(`Player joined: ${data.player.name}`);
 			break;
 		}
 
@@ -26,14 +25,6 @@ export default function players(data) {
 			const player = gameContext.players.get(data.playerId);
 			if (player) {
 				player.resources = data.resources;
-			}
-			break;
-		}
-
-		case 'playerDefeated': {
-			const player = gameContext.players.get(data.playerId);
-			if (player) {
-				console.log(`Player defeated: ${player.name}`);
 			}
 			break;
 		}

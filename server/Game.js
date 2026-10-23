@@ -54,7 +54,6 @@ export default class Game extends BaseGame {
 
 		// Start game loop
 		if (this.server) {
-			console.log('[GAME] Starting game loop for game', this.id);
 			this.startGameLoop();
 		} else {
 			console.warn('[GAME] No server, game loop NOT started!');
@@ -62,7 +61,6 @@ export default class Game extends BaseGame {
 	}
 
 	startGameLoop() {
-		console.log('[GAME] Game loop started, tick rate:', this.tickRate);
 		this.gameLoop = setInterval(() => {
 			try {
 				const now = Date.now();
@@ -84,11 +82,6 @@ export default class Game extends BaseGame {
 	}
 
 	gameTick(deltaTime) {
-		// Debug log every second
-		if (this.tick % 60 === 0) {
-			console.log(`[TICK] tick=${this.tick}, units=${this.units.size}`);
-		}
-
 		// Update all units
 		for (const unit of this.units.values()) {
 			this.updateUnit(unit, deltaTime);
@@ -130,12 +123,8 @@ export default class Game extends BaseGame {
 	}
 
 	moveUnit(unit, deltaTime) {
-		console.log(`[GAME] moveUnit called for ${unit.id}, path length: ${unit.path?.length || 0}`);
-
 		if (!unit.path || unit.path.length === 0) {
 			if (unit.status === 'moving') {
-				console.log(`[GAME] Unit ${unit.id} - Movement complete at`, unit.position);
-
 				// Check if unit has a task to resume after moving
 				if (unit.currentAction) {
 					if (unit.currentAction.targetType === 'resource') {
@@ -193,13 +182,6 @@ export default class Game extends BaseGame {
 		const dy = nextPos.y - unit.visualPosition.y;
 		const distance = Math.sqrt(dx * dx + dy * dy);
 
-		// Debug every 60 ticks
-		if (this.tick % 60 === 0) {
-			console.log(
-				`[GAME] Unit ${unit.id} - Moving: gridPos=${JSON.stringify(unit.position)}, visualPos=${JSON.stringify(unit.visualPosition)}, next=${JSON.stringify(nextPos)}, dist=${distance.toFixed(4)}, moveDistance=${moveDistance.toFixed(4)}, pathLen=${unit.path.length}`,
-			);
-		}
-
 		if (distance <= moveDistance) {
 			// Reached waypoint - snap to grid position
 			unit.position = { ...nextPos };
@@ -230,7 +212,6 @@ export default class Game extends BaseGame {
 		const resource = this.resources.get(unit.currentAction?.targetId);
 
 		if (!resource || resource.amount <= 0) {
-			console.log(`[GATHER] Unit ${unit.id} - Resource not found or depleted`);
 			unit.status = 'idle';
 			unit.currentAction = null;
 			return;
@@ -240,19 +221,12 @@ export default class Game extends BaseGame {
 		const distance = gridDistance(unit.position, resource.position);
 		if (distance > 1) {
 			// Not at resource yet - move to it
-			console.log(
-				`[GATHER] Unit ${unit.id} - Distance ${distance} to resource at`,
-				resource.position,
-				'- pathfinding...',
-			);
 			const path = findPath(unit.position, resource.position, pos => this.isWalkable(pos));
 			if (path.length > 0) {
-				console.log(`[GATHER] Unit ${unit.id} - Path found, length ${path.length}, moving to resource`);
 				unit.path = path;
 				unit.status = 'moving';
 				// Keep currentAction so we know to gather when we arrive
 			} else {
-				console.log(`[GATHER] Unit ${unit.id} - No path to resource!`);
 				// No path to resource
 				unit.status = 'idle';
 				unit.currentAction = null;
@@ -261,9 +235,6 @@ export default class Game extends BaseGame {
 		}
 
 		// At resource - gather
-		if (this.tick % 60 === 0) {
-			console.log(`[GATHER] Unit ${unit.id} - At resource, gathering...`);
-		}
 
 		const unitStats = UNITS[unit.type];
 		const bonus = 1.0;
@@ -418,14 +389,12 @@ export default class Game extends BaseGame {
 		const building = this.buildings.get(unit.currentAction?.targetId);
 
 		if (!building) {
-			console.log(`[BUILD] Unit ${unit.id} - Building not found:`, unit.currentAction?.targetId);
 			unit.status = 'idle';
 			unit.currentAction = null;
 			return;
 		}
 
 		if (building.constructionProgress >= 1.0) {
-			console.log(`[BUILD] Unit ${unit.id} - Building already complete`);
 			unit.status = 'idle';
 			unit.currentAction = null;
 			return;
@@ -438,11 +407,9 @@ export default class Game extends BaseGame {
 
 		if (distance > maxDistance) {
 			// Not at building yet - move to assigned build position
-			console.log(`[BUILD] Unit ${unit.id} - Distance ${distance} to building, moving closer`);
 
 			const target = unit.currentAction.buildPosition;
 			if (!target) {
-				console.log(`[BUILD] Unit ${unit.id} - No build position assigned`);
 				unit.status = 'idle';
 				unit.currentAction = null;
 				return;
@@ -453,7 +420,6 @@ export default class Game extends BaseGame {
 				unit.path = path;
 				unit.status = 'moving';
 			} else {
-				console.log(`[BUILD] Unit ${unit.id} - No path to assigned position`);
 				unit.status = 'idle';
 				unit.currentAction = null;
 			}
@@ -464,12 +430,6 @@ export default class Game extends BaseGame {
 
 		const buildProgress = (unitStats.buildSpeed * deltaTime) / buildingStats.constructionTime;
 		building.constructionProgress = Math.min(1.0, building.constructionProgress + buildProgress);
-
-		if (this.tick % 60 === 0) {
-			console.log(
-				`[BUILD] Unit ${unit.id} building ${building.id}, progress: ${(building.constructionProgress * 100).toFixed(1)}%`,
-			);
-		}
 
 		// Update every 10 ticks
 		if (this.tick % 10 === 0) {
@@ -768,10 +728,6 @@ export default class Game extends BaseGame {
 
 	findBuildPositionForUnit(building, unit) {
 		const buildingStats = BUILDINGS[building.type];
-		console.log(
-			`[FINDPOS] Finding build position for unit ${unit.id} around building ${building.id} at`,
-			building.position,
-		);
 
 		// Collect ALL adjacent walkable tiles around the building perimeter
 		const neighbors = [];
@@ -803,22 +759,18 @@ export default class Game extends BaseGame {
 			) {
 				// Unit has an assigned build position
 				const pos = otherUnit.currentAction.buildPosition;
-				console.log(`[FINDPOS] Unit ${otherUnit.id} already has position:`, pos);
 				occupiedTiles.add(`${pos.x},${pos.y}`);
 			}
 		}
 
 		// Try to find an unoccupied walkable tile
-		console.log(`[FINDPOS] Checking ${neighbors.length} neighbor tiles, ${occupiedTiles.size} already occupied`);
 		for (const target of neighbors) {
 			const tileKey = `${target.x},${target.y}`;
 			if (this.isWalkable(target) && !occupiedTiles.has(tileKey)) {
-				console.log(`[FINDPOS] Found available position:`, target);
 				return target;
 			}
 		}
 
-		console.log(`[FINDPOS] No available position found`);
 		return null; // No available position
 	}
 

@@ -42,8 +42,7 @@ function resources(data) {
 	}
 }
 
-function gameOver(data) {
-	console.log('Game over! Winner:', data.winnerId);
+function gameOver() {
 	// TODO: Show victory/defeat screen
 }
 

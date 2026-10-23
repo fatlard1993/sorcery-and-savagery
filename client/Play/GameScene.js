@@ -15,8 +15,6 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	preload() {
-		console.log('Preloading assets...');
-
 		// Load terrain spritesheet (8 tiles: 2 dirt, 2 grass, 2 water, 2 stone)
 		this.load.spritesheet('ground', '/assets/terrain/ground.png', {
 			frameWidth: 32,
@@ -61,12 +59,6 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	create() {
-		console.log('Creating game scene...');
-		console.log('Server state:', gameContext.serverState);
-		console.log('Players:', gameContext.serverState?.players);
-		console.log('Units:', gameContext.serverState?.units);
-		console.log('Buildings:', gameContext.serverState?.buildings);
-
 		gameContext.scene = this;
 
 		// Check if we have server state
@@ -93,8 +85,6 @@ export default class GameScene extends Phaser.Scene {
 			return;
 		}
 
-		console.log('Creating terrain:', state.world?.terrain?.length, 'tiles');
-
 		// Populate gameContext with server data
 		state.players.forEach(player => {
 			gameContext.players.set(player.id, player);
@@ -105,19 +95,16 @@ export default class GameScene extends Phaser.Scene {
 			new Terrain(this, tile.x, tile.y, tile.type);
 		});
 
-		console.log('Creating resources:', state.world.resources?.length);
 		// Create resource nodes (from world.resources, not separate resources array)
 		state.world.resources.forEach(resource => {
 			new Resource(this, resource);
 		});
 
-		console.log('Creating buildings:', state.buildings?.length);
 		// Create buildings
 		state.buildings.forEach(building => {
 			new Building(this, building);
 		});
 
-		console.log('Creating units:', state.units?.length);
 		// Create units
 		state.units.forEach(unit => {
 			new Unit(this, unit);
@@ -137,7 +124,6 @@ export default class GameScene extends Phaser.Scene {
 			if (townCenter) {
 				const pos = gridToPxPosition(townCenter.position);
 				this.cameras.main.centerOn(pos.x, pos.y);
-				console.log('Centered camera on town center at', pos);
 			}
 		}
 
@@ -171,10 +157,6 @@ export default class GameScene extends Phaser.Scene {
 		gameContext.selectionRect.setOrigin(0, 0);
 		gameContext.selectionRect.setVisible(false);
 		gameContext.sceneLayers.ui.add(gameContext.selectionRect);
-
-		console.log('Game scene created successfully');
-		console.log('Camera position:', this.cameras.main.scrollX, this.cameras.main.scrollY);
-		console.log('Total game objects:', this.children.list.length);
 	}
 
 	update() {

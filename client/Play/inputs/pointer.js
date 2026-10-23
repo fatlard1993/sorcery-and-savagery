@@ -9,17 +9,14 @@ import { BUILDINGS } from '../../../constants/index.js';
 export const onPointerDown = pointer => {
 	// Ignore if a menu button is being clicked
 	if (gameContext.menuButtonClicked) {
-		console.log('Menu button clicked, ignoring onPointerDown');
 		return;
 	}
 
 	// Left-click handling
 	const worldPoint = gameContext.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
-	console.log('Pointer down at world:', worldPoint);
 
 	// Check if clicked on a unit (search in units layer)
 	const unitsLayer = gameContext.sceneLayers.units;
-	console.log('Units layer children:', unitsLayer.list.length);
 
 	const clickedUnit = unitsLayer.list.find(obj => {
 		if (!obj.unitId) return false;
@@ -28,15 +25,12 @@ export const onPointerDown = pointer => {
 		return bounds.contains(worldPoint.x, worldPoint.y);
 	});
 
-	console.log('Clicked unit:', clickedUnit?.unitId);
-
 	if (clickedUnit) {
 		// Set flag to prevent action menu from opening on unit selection
 		gameContext.justSelectedUnit = true;
 
 		const isAlreadySelected = gameContext.selectedUnits.has(clickedUnit.unitId);
 		const shiftHeld = gameContext.scene.input.keyboard.addKey('SHIFT').isDown;
-		console.log('Unit clicked:', clickedUnit.unitId, 'already selected:', isAlreadySelected, 'shift:', shiftHeld);
 
 		if (shiftHeld) {
 			// Shift-clicking: toggle selection without clearing others
@@ -193,26 +187,20 @@ export const onPointerMove = throttle(pointer => {
 export const onPointerUp = async pointer => {
 	// Ignore if a menu button was just clicked
 	if (gameContext.menuButtonClicked) {
-		console.log('Menu button clicked, ignoring onPointerUp');
 		return;
 	}
 
 	const worldPoint = gameContext.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
 	const gridPos = pxToGridPosition({ x: worldPoint.x, y: worldPoint.y });
 
-	console.log('Pointer up at world:', worldPoint, 'grid:', gridPos, 'selectedUnits:', gameContext.selectedUnits.size);
-
 	// Handle selection rectangle completion
 	if (gameContext.isSelecting) {
-		console.log('Was selecting, bounds:', gameContext.selectionRect.getBounds());
 		gameContext.isSelecting = false;
 		gameContext.selectionRect.setVisible(false);
 
 		// Check if this was a tiny rectangle (just a click) vs actual drag
 		const bounds = gameContext.selectionRect.getBounds();
 		const wasDrag = Math.abs(bounds.width) > 5 || Math.abs(bounds.height) > 5;
-
-		console.log('wasDrag:', wasDrag);
 
 		if (wasDrag) {
 			// Box select units
@@ -249,20 +237,14 @@ export const onPointerUp = async pointer => {
 		// Else: was just a click (not a drag)
 		// If no units selected, clear selection now
 		if (!gameContext.scene.input.keyboard.addKey('SHIFT').isDown && gameContext.selectedUnits.size === 0) {
-			console.log('Simple click with no units selected - doing nothing');
 			// Was a simple click with nothing selected - do nothing
 			return;
 		}
-		console.log('Falling through to move command, units selected:', gameContext.selectedUnits.size);
 		// Else: fall through to move command
 	}
 
-	console.log('Checking for radial menu...');
-
 	// Close existing radial menu if open
 	if (gameContext.activeRadialMenu) {
-		console.log('Closing existing radial menu');
-
 		gameContext.activeRadialMenu.destroy();
 		gameContext.activeRadialMenu = null;
 		return; // Don't process this click further
@@ -270,18 +252,14 @@ export const onPointerUp = async pointer => {
 
 	// Handle building placement mode
 	if (gameContext.placingBuilding) {
-		console.log('Placing building:', gameContext.placingBuilding.type, 'at', gridPos);
-
 		try {
 			const result = await placeBuilding({
 				buildingType: gameContext.placingBuilding.type,
 				position: gridPos,
 			});
-			console.log('Building placed successfully, ID:', result.body.buildingId);
 
 			// Auto-assign selected units to construction
 			if (gameContext.selectedUnits.size > 0) {
-				console.log('Auto-assigning', gameContext.selectedUnits.size, 'units to construction');
 				for (const unitId of gameContext.selectedUnits) {
 					try {
 						await assignTask({
@@ -289,7 +267,6 @@ export const onPointerUp = async pointer => {
 							taskType: 'build',
 							targetId: result.body.buildingId,
 						});
-						console.log('Assigned unit', unitId, 'to build');
 					} catch (err) {
 						console.error('Failed to assign unit to build:', err);
 					}
@@ -308,18 +285,14 @@ export const onPointerUp = async pointer => {
 		return;
 	}
 
-	console.log('Checking for actions, selectedUnits:', gameContext.selectedUnits.size);
-
 	// Don't open action menu if we just selected a unit
 	if (gameContext.justSelectedUnit) {
-		console.log('Just selected unit, not opening action menu');
 		gameContext.justSelectedUnit = false;
 		return;
 	}
 
 	// Check if clicked on something that has multiple actions
 	if (gameContext.selectedUnits.size > 0) {
-		console.log('Building available actions...');
 		const availableActions = [];
 
 		// Check if clicked on a resource
@@ -338,7 +311,6 @@ export const onPointerUp = async pointer => {
 				availableActions.push({
 					label: 'Food',
 					onSelect: () => {
-						console.log('Gather Food action selected');
 						gameContext.selectedUnits.forEach(async unitId => {
 							try {
 								await assignTask({
@@ -357,7 +329,6 @@ export const onPointerUp = async pointer => {
 				availableActions.push({
 					label: 'Wood',
 					onSelect: () => {
-						console.log('Chop Wood action selected');
 						gameContext.selectedUnits.forEach(async unitId => {
 							try {
 								await assignTask({
@@ -377,16 +348,13 @@ export const onPointerUp = async pointer => {
 				availableActions.push({
 					label: 'Gather',
 					onSelect: () => {
-						console.log('Gather action selected, assigning to units:', gameContext.selectedUnits);
 						gameContext.selectedUnits.forEach(async unitId => {
 							try {
-								console.log('Assigning gather task to unit:', unitId, 'resource:', clickedResource.resourceId);
 								await assignTask({
 									unitId,
 									taskType: 'gather',
 									targetId: clickedResource.resourceId,
 								});
-								console.log('Gather task assigned successfully');
 							} catch (err) {
 								console.error(`Failed to assign gather task:`, err);
 							}
@@ -409,16 +377,13 @@ export const onPointerUp = async pointer => {
 				availableActions.push({
 					label: 'Build',
 					onSelect: () => {
-						console.log('Build action selected, assigning to units:', gameContext.selectedUnits);
 						gameContext.selectedUnits.forEach(async unitId => {
 							try {
-								console.log('Assigning build task to unit:', unitId, 'building:', clickedBuilding.buildingId);
 								await assignTask({
 									unitId,
 									taskType: 'build',
 									targetId: clickedBuilding.buildingId,
 								});
-								console.log('Build task assigned successfully');
 							} catch (err) {
 								console.error(`Failed to assign build task:`, err);
 							}
@@ -458,8 +423,6 @@ export const onPointerUp = async pointer => {
 							);
 							gameContext.buildingGhost.setStrokeStyle(2, 0x00ff00);
 							gameContext.buildingGhost.setDepth(999);
-
-							console.log('Building placement mode activated:', buildingType);
 						},
 					});
 				},
@@ -474,17 +437,13 @@ export const onPointerUp = async pointer => {
 			},
 		});
 
-		console.log('Available actions count:', availableActions.length);
-
 		// Show radial menu if multiple actions available
 		if (availableActions.length > 1) {
-			console.log('Showing radial menu with', availableActions.length, 'actions');
 			gameContext.activeRadialMenu = new RadialMenu(gameContext.scene, worldPoint.x, worldPoint.y, availableActions);
 			return;
 		}
 
 		// If only one action (Move), execute it directly
-		console.log('Executing move directly');
 		executeMove(gridPos);
 	}
 };

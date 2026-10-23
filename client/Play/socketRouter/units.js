@@ -27,7 +27,6 @@ export default function units(data) {
 			if (unit && data.path) {
 				unit.path = data.path;
 				unit.status = 'moving';
-				console.log('unitMove: Unit starting movement', data.unitId, 'path length:', data.path.length);
 			}
 			break;
 		}
@@ -91,7 +90,6 @@ export default function units(data) {
 			if (unit) {
 				unit.status = data.status;
 				unit.currentAction = data.currentAction;
-				console.log(`Unit ${data.unitId} assigned task:`, data.status, data.currentAction);
 
 				// Update gathering progress bar on sprite
 				const sprite = unitsLayer.list.find(obj => obj.unitId === data.unitId);

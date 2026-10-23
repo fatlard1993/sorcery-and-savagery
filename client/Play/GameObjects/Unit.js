@@ -65,22 +65,17 @@ export default class Unit extends Phaser.GameObjects.Container {
 	}
 
 	moveTo(position, duration = 500) {
-		console.log('Unit.moveTo called with position:', position, 'duration:', duration);
 		const pos = gridToPxPosition(position);
-		console.log('Converted to pixel position:', pos);
-		console.log('Current unit position:', this.x, this.y);
 
 		this.gridPosition = position;
 
-		const tween = this.scene.tweens.add({
+		this.scene.tweens.add({
 			targets: this,
 			x: pos.x,
 			y: pos.y,
 			duration,
 			ease: 'Linear',
 		});
-
-		console.log('Tween created:', tween);
 	}
 
 	updateHealthBar() {

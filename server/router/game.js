@@ -36,22 +36,11 @@ const gameRouter = async (request, server) => {
 
 		const { path } = await request.json();
 
-		console.log(
-			`[MOVE] Unit ${match.unitId} - Current pos:`,
-			unit.position,
-			'Status:',
-			unit.status,
-			'Path length:',
-			path.length,
-		);
-
 		unit.path = path;
 		unit.status = 'moving';
 
 		game.broadcast('unitMove', { unitId: match.unitId, path });
 		game.save(); // Trigger save to persist movement
-
-		console.log(`[MOVE] Unit ${match.unitId} - Set to moving, path:`, path.slice(0, 3), '...');
 
 		return new Response('OK');
 	}
@@ -145,12 +134,6 @@ const gameRouter = async (request, server) => {
 
 			// Find an unoccupied build position for this unit
 			const buildPosition = game.findBuildPositionForUnit(building, unit);
-			console.log(
-				`[ASSIGN] Unit ${match.unitId} assigned build position:`,
-				buildPosition,
-				'for building at:',
-				building.position,
-			);
 			if (!buildPosition) {
 				return Response.json({ error: 'No available build position' }, { status: 400 });
 			}
