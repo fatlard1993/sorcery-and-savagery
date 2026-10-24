@@ -1,5 +1,4 @@
-import { Button, Notify, styled } from '@vanilla-bean/components';
-import { failureReason } from '@vanilla-bean/hypertether';
+import { Button, Notify, failureReason, styled } from '@vanilla-bean/components';
 import { ExitDialog } from '@fatlard1993/web-game-framework/ui/GameRoom';
 import { View } from '@fatlard1993/web-game-framework/ui/layout';
 import { getGame } from '../api/game.js';
@@ -53,7 +52,7 @@ export default class Play extends styled(View, goldHeading) {
 		const game = await getGame(gameId, { cache: false });
 
 		if (game.status !== 'success') {
-			new Notify({ type: 'error', content: failureReason(game) });
+			new Notify({ intent: 'danger', content: failureReason(game) });
 			localStorage.removeItem(gameId);
 			window.location.href = '#/hub';
 			return;

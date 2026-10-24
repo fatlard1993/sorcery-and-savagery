@@ -1,4 +1,4 @@
-import { POST } from '@vanilla-bean/hypertether';
+import { POST } from '@vanilla-bean/components';
 import { getGame } from '@fatlard1993/web-game-framework/client';
 import gameContext from '../shared/gameContext.js';
 

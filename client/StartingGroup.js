@@ -1,5 +1,4 @@
-import { styled, Button, Card, Content, Elem, Notify, Toolbar, View } from '@vanilla-bean/components';
-import { failureReason } from '@vanilla-bean/hypertether';
+import { styled, Button, Card, Content, Elem, Notify, Toolbar, View, failureReason } from '@vanilla-bean/components';
 import { UNITS } from '../constants/index.js';
 import { chooseStartingParty, getGame } from './api/game.js';
 import { gold } from './shared/ui.js';
@@ -141,7 +140,7 @@ export default class StartingGroup extends styled(
 		const game = await getGame(gameId, { cache: false });
 
 		if (game.status !== 'success') {
-			new Notify({ type: 'error', content: failureReason(game) });
+			new Notify({ intent: 'danger', content: failureReason(game) });
 			window.location.href = '#/hub';
 			return;
 		}
@@ -233,7 +232,7 @@ export default class StartingGroup extends styled(
 		const chosen = await chooseStartingParty({ gameId, playerId: this.playerId, startingUnits });
 
 		if (chosen.status !== 'success') {
-			new Notify({ type: 'error', content: failureReason(chosen) });
+			new Notify({ intent: 'danger', content: failureReason(chosen) });
 			return;
 		}
 

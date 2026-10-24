@@ -10,7 +10,7 @@ export default class Join extends styled(BaseJoin, goldHeading) {
 		super(
 			{
 				formData: { name: localStorage.getItem('lastName') || fantasyName() },
-				formInputs: [{ key: 'name', label: 'Your Name', validations: [[/\S/, 'Required']] }],
+				formInputs: [{ key: 'name', label: 'Your Name', validate: value => (/\S/.test(value) ? null : 'Required') }],
 				playUrl: `#/party/${options.gameId}`,
 				...options,
 				toolbar: { heading: 'Join Game', backText: 'Lobby', joinText: 'Join' },

@@ -9,7 +9,7 @@ export default class Create extends styled(BaseCreate, goldHeading) {
 		super(
 			{
 				formData: { name: `${fantasyName()}'s Realm` },
-				formInputs: [{ key: 'name', label: 'Realm Name', validations: [[/\S/, 'Required']] }],
+				formInputs: [{ key: 'name', label: 'Realm Name', validate: value => (/\S/.test(value) ? null : 'Required') }],
 				...options,
 				toolbar: { heading: 'New Game', backText: 'Lobby', createText: 'Create' },
 			},
