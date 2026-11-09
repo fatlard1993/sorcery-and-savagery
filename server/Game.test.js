@@ -78,6 +78,21 @@ describe('choosing where to start', () => {
 	});
 });
 
+describe('deleting', () => {
+	test("a deleted game's loop stops", async () => {
+		const game = newGame();
+
+		await Bun.sleep(50);
+		expect(game.tick).toBeGreaterThan(0);
+
+		game.dispose();
+		const at = game.tick;
+
+		await Bun.sleep(50);
+		expect(game.tick).toBe(at);
+	});
+});
+
 describe('leaving', () => {
 	let game;
 

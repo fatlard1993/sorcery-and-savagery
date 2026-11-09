@@ -60,23 +60,23 @@ export default class Game extends BaseGame {
 		}
 	}
 
+	// The loop stops by itself when the game is deleted (every, stopped on dispose); an error in one tick is logged and
+	// the loop carries on
 	startGameLoop() {
-		this.gameLoop = setInterval(() => {
-			try {
-				const now = Date.now();
-				const deltaTime = (now - this.lastTick) / 1000;
-				this.gameTick(deltaTime);
-				this.lastTick = now;
-				this.tick++;
-			} catch (error) {
-				console.error('[GAME] Error in game loop:', error);
-			}
-		}, this.tickInterval);
+		this.lastTick = Date.now();
+		this.gameLoop = this.every(this.tickInterval, () => {
+			const now = Date.now();
+			const deltaTime = (now - this.lastTick) / 1000;
+			this.gameTick(deltaTime);
+			this.lastTick = now;
+			this.tick++;
+		});
 	}
 
 	stopGameLoop() {
 		if (this.gameLoop) {
 			clearInterval(this.gameLoop);
+			this._loops?.delete(this.gameLoop);
 			this.gameLoop = null;
 		}
 	}
