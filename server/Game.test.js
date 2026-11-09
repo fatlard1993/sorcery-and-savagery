@@ -35,6 +35,21 @@ describe('choosing a starting party', () => {
 	});
 });
 
+describe('joining', () => {
+	let game;
+
+	afterEach(() => game.stopGameLoop());
+
+	test('a player who joins shows as here, and their secret is saved but never shown', () => {
+		game = newGame();
+		const player = game.addPlayer('Ada');
+
+		expect(game.toClient().players).toEqual([expect.objectContaining({ id: player.id, online: true })]);
+		expect(game.toSaveState().secrets[player.id]).toBe(game.secrets.get(player.id));
+		expect(JSON.stringify(game.toClient())).not.toContain(game.secrets.get(player.id));
+	});
+});
+
 describe('choosing where to start', () => {
 	let game;
 

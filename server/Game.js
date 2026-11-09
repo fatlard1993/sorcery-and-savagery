@@ -867,8 +867,8 @@ export default class Game extends BaseGame {
 	}
 
 	// A player joins with a name, then chooses a starting party
-	onPlayerAdded(player) {
-		Object.assign(player, {
+	createPlayer() {
+		return {
 			resources: { wood: 200, stone: 150, iron: 100, water: 100, food: 150 },
 			population: { current: 0, max: 50 },
 			techTree: {
@@ -876,7 +876,7 @@ export default class Game extends BaseGame {
 				unlocked: ['house', 'barracks', 'archery_range', 'tower'],
 			},
 			choosingParty: true,
-		});
+		};
 	}
 
 	chooseStartingParty(playerId, startingUnits) {
@@ -988,26 +988,22 @@ export default class Game extends BaseGame {
 		return { success: true, player };
 	}
 
+	// The framework's id, name, options and players (with whether each is here), and the map
 	toClient() {
 		return {
-			id: this.id,
-			name: this.name,
-			options: this.options,
+			...super.toClient(),
 			world: this.world,
-			players: [...this.players.values()],
 			units: [...this.units.values()],
 			buildings: [...this.buildings.values()],
 			resources: [...this.resources.values()],
 		};
 	}
 
+	// The framework's save (the players and their secrets) and the map
 	toSaveState() {
 		return {
-			id: this.id,
-			name: this.name,
-			options: this.options,
+			...super.toSaveState(),
 			world: this.world,
-			players: [...this.players.values()],
 			units: [...this.units.values()],
 			buildings: [...this.buildings.values()],
 			resources: [...this.resources.values()],
