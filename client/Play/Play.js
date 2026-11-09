@@ -26,7 +26,6 @@ export default class Play extends styled(View, goldHeading) {
 						}),
 					],
 				},
-				body: { style: { display: 'flex', flexDirection: 'column' } },
 			},
 			...children,
 		);
