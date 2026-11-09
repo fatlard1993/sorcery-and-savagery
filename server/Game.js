@@ -1,8 +1,19 @@
-import { Game as BaseGame, simpleId } from '@fatlard1993/web-game-framework';
-import { UNITS, BUILDINGS, RESOURCE_TYPES, TERRAIN_TYPES } from '../constants/index.js';
-import { gridDistance, findPath, getCellsInRect } from '../utils/index.js';
+import { Game as BaseGame, refuse, simpleId } from '@fatlard1993/web-game-framework';
+import { UNITS, BUILDINGS, RESOURCE_TYPES, TERRAIN_TYPES, WORLD_CONFIG } from '../constants/index.js';
+import { gridDistance, findPath, getCellsInRect, isValidGridPosition } from '../utils/index.js';
 import { SpatialGrid } from '../utils/spatial.js';
 import { generateWorld } from './worldGenerator.js';
+
+// The most units a building's production queue holds
+const MAX_QUEUE = 10;
+
+// A grid cell on the map: whole x and y inside it
+const isCell = cell =>
+	!!cell &&
+	typeof cell === 'object' &&
+	Number.isInteger(cell.x) &&
+	Number.isInteger(cell.y) &&
+	isValidGridPosition(cell);
 
 export default class Game extends BaseGame {
 	constructor({ saveState = {}, ...options }) {
@@ -60,6 +71,150 @@ export default class Game extends BaseGame {
 		}
 	}
 
+	// What a player can do, from their page: act('move', { moves }) and the rest. Each runs as the page's own player (never
+	// one the message names), refuse('why') turns it down and the page is told why, and every page is sent its view after
+	actions = {
+		chooseStartingParty(player, { startingUnits } = {}) {
+			const result = this.chooseStartingParty(player.id, startingUnits);
+
+			if (!result.success) refuse(result.error);
+		},
+
+		spawn(player, { position } = {}) {
+			if (!isCell(position)) refuse('Choose a spot on the map');
+			if (!this.isBuildable(position)) refuse('The campfire cannot go there');
+
+			const result = this.spawnPlayerAtLocation(player.id, position);
+
+			if (!result.success) refuse(result.error);
+		},
+
+		// Each unit walks the path its page found: from where it stands, a step at a time, over ground it can walk
+		move(player, { moves } = {}) {
+			if (!Array.isArray(moves) || !moves.length) refuse('Nothing to move');
+
+			const units = moves.map(move => {
+				const { unitId, path } = move ?? {};
+				const unit = this.ownUnit(player, unitId);
+
+				if (!this.isPathFor(unit, path)) refuse('That path cannot be walked');
+
+				return [unit, path];
+			});
+
+			for (const [unit, path] of units) {
+				unit.path = path.map(({ x, y }) => ({ x, y }));
+				unit.status = 'moving';
+
+				this.broadcast('unitMove', { unitId: unit.id, path: unit.path });
+			}
+		},
+
+		// Gathering from a resource (a forest gives food or wood), or building a site still under construction
+		task(player, { unitIds, taskType, targetId, gatherType } = {}) {
+			if (!Array.isArray(unitIds) || !unitIds.length) refuse('No units chosen');
+
+			const units = unitIds.map(unitId => this.ownUnit(player, unitId));
+
+			if (taskType === 'gather') {
+				const resource = typeof targetId === 'string' && this.resources.get(targetId);
+
+				if (!resource) refuse('Resource not found');
+
+				const gathered = resource.type === 'forest' ? (gatherType ?? 'food') : resource.resourceType;
+
+				if (resource.type === 'forest' && !['food', 'wood'].includes(gathered)) refuse('A forest gives food or wood');
+
+				for (const unit of units)
+					this.setTask(unit, 'gathering', { targetId, targetType: 'resource', carrying: 0, gatherType: gathered });
+			} else if (taskType === 'build') {
+				const building = typeof targetId === 'string' && this.buildings.get(targetId);
+
+				if (!building) refuse('Building not found');
+
+				this.assignBuilders(units, building);
+			} else refuse('Invalid task type');
+		},
+
+		// A building site, and the units chosen to build it
+		placeBuilding(player, { buildingType, position, builders = [] } = {}) {
+			if (!Object.hasOwn(BUILDINGS, buildingType ?? '')) refuse('No such building');
+			if (!isCell(position)) refuse('Choose a spot on the map');
+			if (!Array.isArray(builders)) refuse('Builders are a list of units');
+
+			const units = builders.map(unitId => this.ownUnit(player, unitId));
+			const result = this.placeBuilding(buildingType, player.id, position);
+
+			if (!result.success) refuse(result.error);
+
+			this.assignBuilders(units, this.buildings.get(result.buildingId), { quiet: true });
+		},
+
+		produce(player, { buildingId, unitType } = {}) {
+			const building = typeof buildingId === 'string' && this.buildings.get(buildingId);
+
+			if (!building || building.playerId !== player.id) refuse('Building not found');
+			if (building.constructionProgress < 1.0) refuse('The building is not finished');
+			if (!BUILDINGS[building.type].produces.includes(unitType)) refuse('That building cannot make that unit');
+			if (building.productionQueue.length >= MAX_QUEUE) refuse(`At most ${MAX_QUEUE} units wait in a queue`);
+
+			building.productionQueue.push({ unitType, progress: 0 });
+
+			this.broadcast('productionQueueUpdated', { buildingId, queue: building.productionQueue });
+		},
+	};
+
+	// What a page sends is whatever it sends: nothing at all (null) is read as no fields, and refused for what's missing
+	act(playerId, name, data) {
+		return super.act(playerId, name, data ?? {});
+	}
+
+	ownUnit(player, unitId) {
+		const unit = typeof unitId === 'string' && this.units.get(unitId);
+
+		if (!unit || unit.playerId !== player.id) refuse('Unit not found');
+
+		return unit;
+	}
+
+	// A path from where the unit stands (or the step it is on its way to), a step at a time over walkable ground
+	isPathFor(unit, path) {
+		if (!Array.isArray(path) || !path.length || path.length > WORLD_CONFIG.width * WORLD_CONFIG.height) return false;
+
+		let from = unit.position;
+
+		for (const [at, cell] of path.entries()) {
+			if (!isCell(cell) || gridDistance(from, cell) > (at === 0 ? 2 : 1) || !this.isWalkable(cell)) return false;
+			from = cell;
+		}
+
+		return true;
+	}
+
+	setTask(unit, status, currentAction) {
+		unit.status = status;
+		unit.currentAction = currentAction;
+
+		this.broadcast('unitTaskAssigned', { unitId: unit.id, status, currentAction });
+	}
+
+	// Each builder takes its own free spot around the site; with none left for any of them, the task is refused (a site
+	// just placed is placed anyway: quiet)
+	assignBuilders(units, building, { quiet = false } = {}) {
+		let assigned = 0;
+
+		for (const unit of units) {
+			const buildPosition = this.findBuildPositionForUnit(building, unit);
+
+			if (!buildPosition) continue;
+
+			this.setTask(unit, 'building', { targetId: building.id, targetType: 'building', buildPosition });
+			assigned++;
+		}
+
+		if (units.length && !assigned && !quiet) refuse('No available build position');
+	}
+
 	// The loop stops by itself when the game is deleted (every, stopped on dispose); an error in one tick is logged and
 	// the loop carries on
 	startGameLoop() {
@@ -97,6 +252,14 @@ export default class Game extends BaseGame {
 			// Check every second
 			this.checkWinConditions();
 		}
+
+		// A player's resources or population changed: every page is sent its view
+		if (this.playersChanged) this.publish();
+	}
+
+	publish() {
+		this.playersChanged = false;
+		super.publish();
 	}
 
 	updateUnit(unit, deltaTime) {
@@ -317,10 +480,7 @@ export default class Game extends BaseGame {
 				unit.currentAction.gatherType || this.resources.get(unit.currentAction.targetId).resourceType;
 			player.resources[resourceType] += unit.currentAction.carrying;
 
-			this.broadcast('playerResourcesUpdated', {
-				playerId: player.id,
-				resources: player.resources,
-			});
+			this.playersChanged = true;
 
 			unit.status = 'idle';
 			unit.currentAction = null;
@@ -335,10 +495,7 @@ export default class Game extends BaseGame {
 				unit.currentAction.gatherType || this.resources.get(unit.currentAction.targetId).resourceType;
 			player.resources[resourceType] += unit.currentAction.carrying;
 
-			this.broadcast('playerResourcesUpdated', {
-				playerId: player.id,
-				resources: player.resources,
-			});
+			this.playersChanged = true;
 
 			// Reset carrying
 			unit.currentAction.carrying = 0;
@@ -374,10 +531,7 @@ export default class Game extends BaseGame {
 					unit.currentAction.gatherType || this.resources.get(unit.currentAction.targetId).resourceType;
 				player.resources[resourceType] += unit.currentAction.carrying;
 
-				this.broadcast('playerResourcesUpdated', {
-					playerId: player.id,
-					resources: player.resources,
-				});
+				this.playersChanged = true;
 
 				unit.status = 'idle';
 				unit.currentAction = null;
@@ -550,10 +704,7 @@ export default class Game extends BaseGame {
 		}
 
 		if (resourceUpdated && this.tick % 60 === 0) {
-			this.broadcast('playerResourcesUpdated', {
-				playerId: player.id,
-				resources: player.resources,
-			});
+			this.playersChanged = true;
 		}
 
 		// Unit production queue
@@ -605,6 +756,7 @@ export default class Game extends BaseGame {
 		// Update player population
 		const player = this.players.get(playerId);
 		player.population.current += unitStats.populationCost;
+		this.playersChanged = true;
 
 		this.broadcast('unitSpawned', {
 			unit,
@@ -688,10 +840,7 @@ export default class Game extends BaseGame {
 			building,
 		});
 
-		this.broadcast('playerResourcesUpdated', {
-			playerId: player.id,
-			resources: player.resources,
-		});
+		this.playersChanged = true;
 
 		return { success: true, buildingId: building.id };
 	}
@@ -705,6 +854,7 @@ export default class Game extends BaseGame {
 			const player = this.players.get(target.playerId);
 			const unitStats = UNITS[target.type];
 			player.population.current -= unitStats.populationCost;
+			this.playersChanged = true;
 
 			this.broadcast('unitDestroyed', {
 				unitId: target.id,
@@ -718,6 +868,7 @@ export default class Game extends BaseGame {
 			if (buildingStats.populationProvided) {
 				const player = this.players.get(target.playerId);
 				player.population.max -= buildingStats.populationProvided;
+				this.playersChanged = true;
 			}
 
 			this.broadcast('buildingDestroyed', {
@@ -905,9 +1056,15 @@ export default class Game extends BaseGame {
 			needsLocationChoice: true,
 		};
 
-		this.broadcast('playerJoined', { player });
-
 		return { success: true, player };
+	}
+
+	onPlayerAdded() {
+		this.publish();
+	}
+
+	onPresence() {
+		this.publish();
 	}
 
 	// A player who leaves takes their units and buildings with them
@@ -927,6 +1084,8 @@ export default class Game extends BaseGame {
 			this.buildings.delete(building.id);
 			this.broadcast('buildingDestroyed', { buildingId: building.id });
 		}
+
+		this.publish();
 	}
 
 	// Called when player chooses their spawn location
@@ -983,15 +1142,31 @@ export default class Game extends BaseGame {
 
 		delete player.pendingSpawn;
 
-		this.broadcast('playerJoined', { player });
-
 		return { success: true, player };
 	}
 
-	// The framework's id, name, options and players (with whether each is here), and the map
+	// What each page is sent as the game changes (publish): the players, with each player's own resources and party on
+	// their page alone. Units, buildings and the map arrive as they change (broadcast), on the game the page fetched.
+	viewFor(playerId) {
+		return {
+			players: [...this.players.values()].map(player =>
+				player.id === playerId ? { ...player, online: this.online.has(player.id) } : this.publicPlayer(player),
+			),
+		};
+	}
+
+	// A player as anyone sees them: not their stockpile, nor the party they have yet to place
+	publicPlayer(player) {
+		const { resources: _resources, pendingSpawn, ...seen } = player;
+
+		return { ...seen, ...(pendingSpawn && { pendingSpawn: true }), online: this.online.has(player.id) };
+	}
+
+	// The framework's id, name and options, the players as anyone sees them, and the map
 	toClient() {
 		return {
 			...super.toClient(),
+			players: [...this.players.values()].map(player => this.publicPlayer(player)),
 			world: this.world,
 			units: [...this.units.values()],
 			buildings: [...this.buildings.values()],
