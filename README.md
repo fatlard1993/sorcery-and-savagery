@@ -28,7 +28,7 @@ Create a game or join one from the lobby, name yourself, pick 7 individuals for 
 
 ## Dev
 
-`bun dev` runs the server with hot reload and rebuilds the client on change (type `b` to rebuild, `stop` to quit); `bun run dev:clean` does the same from an empty save. `bun test` runs the tests.
+`bun dev` restarts the server on each save and rebuilds the client on change (type `b` to rebuild, `stop` to quit); `bun run dev:clean` does the same from an empty save. `bun test` runs the tests.
 
 ## Current state
 

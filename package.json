@@ -17,7 +17,7 @@
 		"build:clean": "rm -rf ./client/build/",
 		"db:clean": "rm -f ~/.sorcery-and-savagery.json",
 		"start": "NODE_ENV=production bun server/index.js",
-		"dev": "NODE_ENV=development bun --hot server/index.js",
+		"dev": "NODE_ENV=development bun --watch server/index.js",
 		"dev:clean": "bun run db:clean && bun run dev",
 		"service:enable": "vbc-service enable --port 3040",
 		"service:disable": "vbc-service disable",
@@ -30,7 +30,7 @@
 		"version": "npm version"
 	},
 	"dependencies": {
-		"@fatlard1993/web-game-framework": "github:fatlard1993/web-game-framework#ecbf9bb",
+		"@fatlard1993/web-game-framework": "github:fatlard1993/web-game-framework#d388df9",
 		"@vanilla-bean/components": "^7.0.2",
 		"argi-cli": "^1.0.0",
 		"phaser": "^3.90.0"
