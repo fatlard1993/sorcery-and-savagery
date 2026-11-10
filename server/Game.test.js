@@ -79,6 +79,56 @@ describe('choosing where to start', () => {
 	});
 });
 
+describe('winning', () => {
+	let game;
+
+	afterEach(() => game.stopGameLoop());
+
+	test('a player still choosing a party or a spot is not defeated, and the one playing does not win by it', () => {
+		game = newGame();
+		const ada = game.addPlayer('Ada');
+		const brann = game.addPlayer('Brann');
+		const said = [];
+
+		game.broadcast = update => said.push(update);
+		game.chooseStartingParty(ada.id, [{ type: 'worker' }]);
+		game.spawnPlayerAtLocation(ada.id, { x: 32, y: 32 });
+
+		for (const choosing of [() => {}, () => game.chooseStartingParty(brann.id, [{ type: 'worker' }])]) {
+			choosing();
+			game.checkWinConditions();
+
+			expect(said).not.toContain('gameOver');
+			expect(said).not.toContain('playerDefeated');
+			expect(game.gameLoop).not.toBeNull();
+		}
+	});
+
+	test('a player left with nothing is defeated once, and the last one standing wins', () => {
+		game = newGame();
+		const ada = game.addPlayer('Ada');
+		const brann = game.addPlayer('Brann');
+		const said = [];
+
+		for (const [player, x] of [
+			[ada, 20],
+			[brann, 44],
+		]) {
+			game.chooseStartingParty(player.id, [{ type: 'worker' }]);
+			game.spawnPlayerAtLocation(player.id, { x, y: 32 });
+		}
+		game.broadcast = update => said.push(update);
+		for (const thing of [...game.units.values(), ...game.buildings.values()])
+			if (thing.playerId === brann.id) (game.units.delete(thing.id), game.buildings.delete(thing.id));
+
+		game.checkWinConditions();
+		game.checkWinConditions();
+
+		expect(said.filter(update => update === 'playerDefeated')).toHaveLength(1);
+		expect(said).toContain('gameOver');
+	});
+});
+
 describe('deleting', () => {
 	test("a deleted game's loop stops", async () => {
 		const game = newGame();

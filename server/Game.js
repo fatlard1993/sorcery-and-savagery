@@ -942,17 +942,24 @@ export default class Game extends BaseGame {
 			}
 		}
 
-		// Find players with no buildings AND no units
+		// Find players with no buildings AND no units: not one still choosing a party or a spot, who has yet to have any
+		// (they'd lose before starting, and the one already playing win, its loop stopped); each is said once
 		const defeatedPlayers = new Set();
 		for (const player of this.players.values()) {
+			if (player.choosingParty || player.pendingSpawn) continue;
+
 			const hasBuildings = playerBuildingCounts.has(player.id) && playerBuildingCounts.get(player.id) > 0;
 			const hasUnits = playerUnitCounts.has(player.id) && playerUnitCounts.get(player.id) > 0;
 
 			if (!hasBuildings && !hasUnits) {
 				defeatedPlayers.add(player.id);
-				this.broadcast('playerDefeated', {
-					playerId: player.id,
-				});
+
+				if (!player.defeated) {
+					player.defeated = true;
+					this.broadcast('playerDefeated', {
+						playerId: player.id,
+					});
+				}
 			}
 		}
 
