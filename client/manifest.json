@@ -6,13 +6,5 @@
 	"display": "standalone",
 	"theme_color": "#4f7a3a",
 	"background_color": "#1b1b1b",
-	"start_url": ".",
-	"icons": [
-		{
-			"src": "assets/buildings/town_center.png",
-			"sizes": "96x96",
-			"type": "image/png",
-			"purpose": "any"
-		}
-	]
+	"start_url": "."
 }
