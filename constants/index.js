@@ -1,4 +1,4 @@
-export { UNITS } from './units.js';
+export { UNITS, STARTING_PARTY_SIZE } from './units.js';
 export { BUILDINGS } from './buildings.js';
 export { RESOURCE_TYPES, RESOURCE_COLORS } from './resources.js';
 

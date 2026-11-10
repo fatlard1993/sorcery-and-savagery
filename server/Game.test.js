@@ -28,7 +28,14 @@ describe('choosing a starting party', () => {
 		game = newGame();
 		const player = game.addPlayer('Ada');
 
-		for (const party of [[], undefined, [{ type: 'dragon' }], ['worker']]) {
+		for (const party of [
+			[],
+			undefined,
+			[{ type: 'dragon' }],
+			[{ type: 'toString' }],
+			['worker'],
+			Array(8).fill({ type: 'worker' }),
+		]) {
 			expect(game.chooseStartingParty(player.id, party).success).toBe(false);
 		}
 

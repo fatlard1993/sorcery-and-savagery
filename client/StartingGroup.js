@@ -1,10 +1,9 @@
 import { styled, Button, Card, Content, Elem, Notify, Toolbar, View } from '@vanilla-bean/components';
 import { act, enterGame } from '@fatlard1993/web-game-framework/client';
-import { UNITS } from '../constants/index.js';
+import { STARTING_PARTY_SIZE, UNITS } from '../constants/index.js';
 import { gold } from './shared/ui.js';
 
 const BASE_CLASSES = ['worker', 'warrior', 'archer', 'mage', 'healer'];
-const MAX_UNITS = 7;
 
 export default class StartingGroup extends styled(
 	View,
@@ -103,13 +102,13 @@ export default class StartingGroup extends styled(
 		new Elem({
 			appendTo: party,
 			className: 'subtitle',
-			textContent: `Select ${MAX_UNITS} individuals to begin your journey`,
+			textContent: `Select ${STARTING_PARTY_SIZE} individuals to begin your journey`,
 		});
 
 		this.counterDisplay = new Elem({
 			appendTo: party,
 			className: 'counter',
-			textContent: `Selected: 0 / ${MAX_UNITS}`,
+			textContent: `Selected: 0 / ${STARTING_PARTY_SIZE}`,
 		});
 
 		this.unitsContainer = new Elem({
@@ -155,7 +154,7 @@ export default class StartingGroup extends styled(
 
 	updateCounter() {
 		const total = this.getTotalSelected();
-		this.counterDisplay.elem.textContent = `Selected: ${total} / ${MAX_UNITS}`;
+		this.counterDisplay.elem.textContent = `Selected: ${total} / ${STARTING_PARTY_SIZE}`;
 
 		// Update button state
 		this.updateButton();
@@ -163,7 +162,7 @@ export default class StartingGroup extends styled(
 
 	updateButton() {
 		if (this.confirmButton) {
-			this.confirmButton.elem.disabled = this.getTotalSelected() !== MAX_UNITS;
+			this.confirmButton.elem.disabled = this.getTotalSelected() !== STARTING_PARTY_SIZE;
 		}
 	}
 
@@ -206,7 +205,7 @@ export default class StartingGroup extends styled(
 							icon: 'plus',
 							attributes: { 'aria-label': `One more ${unitData.name}` },
 							onPointerPress: () => {
-								if (this.getTotalSelected() < MAX_UNITS) {
+								if (this.getTotalSelected() < STARTING_PARTY_SIZE) {
 									this.unitCounts[unitType]++;
 									countDisplay.elem.textContent = this.unitCounts[unitType];
 									this.updateCounter();

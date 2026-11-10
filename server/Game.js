@@ -1,5 +1,12 @@
 import { Game as BaseGame, refuse, simpleId } from '@fatlard1993/web-game-framework';
-import { UNITS, BUILDINGS, RESOURCE_TYPES, TERRAIN_TYPES, WORLD_CONFIG } from '../constants/index.js';
+import {
+	UNITS,
+	BUILDINGS,
+	RESOURCE_TYPES,
+	STARTING_PARTY_SIZE,
+	TERRAIN_TYPES,
+	WORLD_CONFIG,
+} from '../constants/index.js';
 import { gridDistance, findPath, getCellsInRect, isValidGridPosition } from '../utils/index.js';
 import { SpatialGrid } from '../utils/spatial.js';
 import { generateWorld } from './worldGenerator.js';
@@ -1043,8 +1050,14 @@ export default class Game extends BaseGame {
 			return { success: false, error: 'Player not found or party already chosen' };
 		}
 
-		if (!Array.isArray(startingUnits) || !startingUnits.length || !startingUnits.every(unit => UNITS[unit?.type])) {
-			return { success: false, error: 'A starting party is a non-empty list of units' };
+		// Each worker adds to what the player starts with, so the party is at most the size the page offers
+		if (
+			!Array.isArray(startingUnits) ||
+			!startingUnits.length ||
+			startingUnits.length > STARTING_PARTY_SIZE ||
+			!startingUnits.every(unit => typeof unit?.type === 'string' && Object.hasOwn(UNITS, unit.type))
+		) {
+			return { success: false, error: `A starting party is 1 to ${STARTING_PARTY_SIZE} units` };
 		}
 
 		// More workers = more starting resources: +15% per worker

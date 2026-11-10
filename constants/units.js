@@ -126,3 +126,6 @@ export const UNITS = {
 		healingRange: 4, // tiles
 	},
 };
+
+// How many individuals a player picks for the party they start with
+export const STARTING_PARTY_SIZE = 7;
