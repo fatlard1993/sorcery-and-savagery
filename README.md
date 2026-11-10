@@ -36,8 +36,8 @@ Early and unfinished. Working: the lobby, the starting party, the generated map,
 
 Not built yet:
 
-- **Spawn location picker.** A player who has chosen a party waits with it pending until a spawn location is chosen, but the client has no screen for it yet, so a new player sees the map with no campfire or units. The server's `POST /games/:gameId/players/:playerId/spawn` takes a `position` (the screenshot's players were spawned that way).
-- **Unit production.** The server queues it; nothing in the client asks for it.
+- **Spawn location picker.** A player who has chosen a party waits with it pending until a spawn location is chosen, but the client has no screen for it yet, so a new player sees the map with no campfire or units. The game's `spawn` action takes a `position` on open ground (`act('spawn', { position: { x, y } })` from the player's page; the screenshot's players were spawned that way).
+- **Unit production.** The game's `produce` action queues it at a finished building that makes that unit; nothing in the client asks for it, and it costs nothing yet.
 - **Building range.** Buildings can go anywhere, not within reach of the campfire.
 
 Known bugs (from [TODO.md](./TODO.md)): units can spawn on impassable terrain and stay stuck, the building preview sits a little off the real site, box selection has dead space, and resource and building variants aren't saved, so they can differ between players and reloads.
