@@ -20,15 +20,3 @@ test('the game list is the framework route; a page path is the page; a missing f
 	expect((await get('/chunk-gone.js')).status).toBe(404);
 	expect((await get('/games/g1/nothing-here')).status).toBe(404);
 });
-
-test('a body that is not JSON is a 400, not a server error', async () => {
-	const answer = await route(
-		new Request('http://localhost/games/g1/players/p1/starting-party', {
-			method: 'POST',
-			body: '{bad',
-			headers: { 'content-type': 'application/json' },
-		}),
-	);
-
-	expect(answer.status).toBe(400);
-});

@@ -59,7 +59,7 @@ export default class ResourceHUD extends styled(
 
 	updateResources() {
 		const player = gameContext.players.currentPlayer;
-		if (!player) return;
+		if (!player?.resources) return;
 
 		this.elem.innerHTML = '';
 

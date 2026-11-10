@@ -1,40 +1,83 @@
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import StartingGroup from './StartingGroup.js';
 
-const json = body => new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } });
+// The page enters the game and acts in it through the framework; here, as a game with one player still choosing
+const entered = [];
+const acted = [];
+let players = [{ id: 'p2', choosingParty: true }];
+let answer = { ok: true };
+
+mock.module('@fatlard1993/web-game-framework/client', () => ({
+	enterGame: async (gameId, { notMember }) => {
+		entered.push(gameId);
+
+		const game = { id: gameId, players };
+
+		if (!players.some(({ id }) => id === localStorage.getItem(gameId))) {
+			notMember(game);
+
+			return { leave: () => {} };
+		}
+
+		return { game, leave: () => {} };
+	},
+	act: async (name, data) => {
+		acted.push({ name, data });
+
+		return answer;
+	},
+}));
+
+const { default: StartingGroup } = await import('./StartingGroup.js');
 
 describe("the starting party is this tab's player in the game it's for", () => {
 	let view;
-	let fetchSpy;
 
 	beforeEach(() => {
 		localStorage.clear();
 		window.location.hash = '#/';
-		fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(async (url, { method } = {}) =>
-			method === 'POST' ? json({ id: 'p2' }) : json({ id: 'g2', players: [{ id: 'p2', choosingParty: true }] }),
-		);
+		entered.length = 0;
+		acted.length = 0;
+		players = [{ id: 'p2', choosingParty: true }];
+		answer = { ok: true };
 	});
 
 	afterEach(() => {
-		fetchSpy.mockRestore();
 		view?.destroy?.();
 		view = null;
 	});
 
-	test('with a player stored for each of two games, the party is chosen for the one in the route', async () => {
+	const choose = async () => {
+		const more = screen.getByRole('button', { name: 'One more Worker' });
+
+		for (let i = 0; i < 7; i++) await userEvent.click(more);
+		await userEvent.click(screen.getByRole('button', { name: 'Begin Your Conquest' }));
+	};
+
+	test('with a player stored for each of two games, the party is chosen in the one in the route, as an action', async () => {
 		localStorage.setItem('g1', 'p1');
 		localStorage.setItem('g2', 'p2');
 		view = new StartingGroup({ gameId: 'g2', appendTo: container });
 
-		const more = screen.getByRole('button', { name: 'One more Worker' });
-		for (let i = 0; i < 7; i++) await userEvent.click(more);
-		await userEvent.click(screen.getByRole('button', { name: 'Begin Your Conquest' }));
+		await choose();
 
 		await waitFor(() => expect(window.location.hash).toBe('#/play/g2'));
-		const [url, { body }] = fetchSpy.mock.calls.find(([, options]) => options?.method === 'POST');
-		expect(url).toEndWith('/games/g2/players/p2/starting-party');
-		expect(JSON.parse(body).startingUnits).toHaveLength(7);
+		expect(entered).toEqual(['g2']);
+		expect(acted).toEqual([
+			{ name: 'chooseStartingParty', data: { startingUnits: Array(7).fill({ type: 'worker' }) } },
+		]);
+	});
+
+	test('a party the game refuses stays to be chosen again', async () => {
+		localStorage.setItem('g2', 'p2');
+		answer = { ok: false, error: 'Player not found or party already chosen' };
+		view = new StartingGroup({ gameId: 'g2', appendTo: container });
+
+		await choose();
+
+		await waitFor(() => expect(acted).toHaveLength(1));
+		expect(window.location.hash).toBe('#/');
 	});
 
 	test('a game this tab has no player in goes to its join, whatever another game stored', async () => {
@@ -42,12 +85,12 @@ describe("the starting party is this tab's player in the game it's for", () => {
 		view = new StartingGroup({ gameId: 'g3', appendTo: container });
 
 		await waitFor(() => expect(window.location.hash).toBe('#/join/g3'));
-		expect(fetchSpy).not.toHaveBeenCalled();
+		expect(entered).toEqual([]);
 	});
 
 	test('a player whose party is chosen goes on to play', async () => {
 		localStorage.setItem('g2', 'p2');
-		fetchSpy.mockImplementation(async () => json({ id: 'g2', players: [{ id: 'p2' }] }));
+		players = [{ id: 'p2' }];
 		view = new StartingGroup({ gameId: 'g2', appendTo: container });
 
 		await waitFor(() => expect(window.location.hash).toBe('#/play/g2'));

@@ -10,14 +10,8 @@ export default function units(data) {
 
 	switch (data.update) {
 		case 'unitSpawned': {
-			// Create new unit sprite
+			// Create new unit sprite (the population comes with the players' next view)
 			new Unit(gameContext.scene, data.unit);
-
-			// Update player resources
-			const player = gameContext.players.get(data.unit.playerId);
-			if (player) {
-				player.population.current += 1;
-			}
 			break;
 		}
 

@@ -1,6 +1,6 @@
-import { styled, Button, Card, Content, Elem, Notify, Toolbar, View, failureReason } from '@vanilla-bean/components';
+import { styled, Button, Card, Content, Elem, Notify, Toolbar, View } from '@vanilla-bean/components';
+import { act, enterGame } from '@fatlard1993/web-game-framework/client';
 import { UNITS } from '../constants/index.js';
-import { chooseStartingParty, getGame } from './api/game.js';
 import { gold } from './shared/ui.js';
 
 const BASE_CLASSES = ['worker', 'warrior', 'archer', 'mage', 'healer'];
@@ -128,7 +128,8 @@ export default class StartingGroup extends styled(
 		this._checkPlayer();
 	}
 
-	// Only a player of this game still choosing has a party to pick; anyone else goes where they belong
+	// Only a player of this game still choosing has a party to pick; anyone else goes where they belong. The page is in
+	// the game from here, so choosing is an action as that player.
 	async _checkPlayer() {
 		const { gameId } = this.options;
 
@@ -137,18 +138,19 @@ export default class StartingGroup extends styled(
 			return;
 		}
 
-		const game = await getGame(gameId, { cache: false });
+		const { game, leave } = await enterGame(gameId, {
+			notMember: () => (window.location.href = `#/join/${gameId}`),
+			gone: () => {
+				new Notify({ intent: 'danger', content: 'That game is gone' });
+				window.location.href = '#/hub';
+			},
+		});
 
-		if (game.status !== 'success') {
-			new Notify({ intent: 'danger', content: failureReason(game) });
-			window.location.href = '#/hub';
-			return;
-		}
+		if (!game) return;
 
-		const player = game.body.players.find(({ id }) => id === this.playerId);
+		this.addCleanup('game', leave);
 
-		if (!player) window.location.href = `#/join/${gameId}`;
-		else if (!player.choosingParty) window.location.href = `#/play/${gameId}`;
+		if (!game.players.find(({ id }) => id === this.playerId)?.choosingParty) window.location.href = `#/play/${gameId}`;
 	}
 
 	updateCounter() {
@@ -228,14 +230,8 @@ export default class StartingGroup extends styled(
 			}
 		});
 
-		const { gameId } = this.options;
-		const chosen = await chooseStartingParty({ gameId, playerId: this.playerId, startingUnits });
-
-		if (chosen.status !== 'success') {
-			new Notify({ intent: 'danger', content: failureReason(chosen) });
-			return;
-		}
-
-		window.location.href = `#/play/${gameId}`;
+		// A refusal is shown by act, and the party stays to be chosen again
+		if ((await act('chooseStartingParty', { startingUnits })).ok)
+			window.location.href = `#/play/${this.options.gameId}`;
 	}
 }

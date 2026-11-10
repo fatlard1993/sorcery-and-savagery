@@ -1,10 +1,14 @@
 import { throttle } from '@vanilla-bean/components';
+import { act } from '@fatlard1993/web-game-framework/client';
 import { pxToGridPosition, gridToPxPosition, findPath } from '../../../utils/index.js';
-import { moveUnit, assignTask, placeBuilding } from '../../api/game.js';
 import gameContext from '../../shared/gameContext.js';
 import RadialMenu from '../RadialMenu.js';
 import BuildingMenu from '../BuildingMenu.js';
 import { BUILDINGS } from '../../../constants/index.js';
+
+// The selected units this player can command (a click can select anyone's, to look at)
+const ownSelected = () =>
+	[...gameContext.selectedUnits].filter(unitId => gameContext.units.get(unitId)?.playerId === gameContext.playerId);
 
 export const onPointerDown = pointer => {
 	// Ignore if a menu button is being clicked
@@ -252,29 +256,12 @@ export const onPointerUp = async pointer => {
 
 	// Handle building placement mode
 	if (gameContext.placingBuilding) {
-		try {
-			const result = await placeBuilding({
-				buildingType: gameContext.placingBuilding.type,
-				position: gridPos,
-			});
-
-			// Auto-assign selected units to construction
-			if (gameContext.selectedUnits.size > 0) {
-				for (const unitId of gameContext.selectedUnits) {
-					try {
-						await assignTask({
-							unitId,
-							taskType: 'build',
-							targetId: result.body.buildingId,
-						});
-					} catch (err) {
-						console.error('Failed to assign unit to build:', err);
-					}
-				}
-			}
-		} catch (err) {
-			console.error('Failed to place building:', err);
-		}
+		// The site, with the selected units set to building it; a refusal (too far, too costly) is shown
+		await act('placeBuilding', {
+			buildingType: gameContext.placingBuilding.type,
+			position: gridPos,
+			builders: ownSelected(),
+		});
 
 		// Exit placement mode and destroy ghost
 		gameContext.placingBuilding = null;
@@ -311,17 +298,11 @@ export const onPointerUp = async pointer => {
 				availableActions.push({
 					label: 'Food',
 					onSelect: () => {
-						gameContext.selectedUnits.forEach(async unitId => {
-							try {
-								await assignTask({
-									unitId,
-									taskType: 'gather',
-									targetId: clickedResource.resourceId,
-									gatherType: 'food',
-								});
-							} catch (err) {
-								console.error(`Failed to assign gather food task:`, err);
-							}
+						act('task', {
+							unitIds: ownSelected(),
+							taskType: 'gather',
+							targetId: clickedResource.resourceId,
+							gatherType: 'food',
 						});
 					},
 				});
@@ -329,17 +310,11 @@ export const onPointerUp = async pointer => {
 				availableActions.push({
 					label: 'Wood',
 					onSelect: () => {
-						gameContext.selectedUnits.forEach(async unitId => {
-							try {
-								await assignTask({
-									unitId,
-									taskType: 'gather',
-									targetId: clickedResource.resourceId,
-									gatherType: 'wood',
-								});
-							} catch (err) {
-								console.error(`Failed to assign chop wood task:`, err);
-							}
+						act('task', {
+							unitIds: ownSelected(),
+							taskType: 'gather',
+							targetId: clickedResource.resourceId,
+							gatherType: 'wood',
 						});
 					},
 				});
@@ -348,16 +323,10 @@ export const onPointerUp = async pointer => {
 				availableActions.push({
 					label: 'Gather',
 					onSelect: () => {
-						gameContext.selectedUnits.forEach(async unitId => {
-							try {
-								await assignTask({
-									unitId,
-									taskType: 'gather',
-									targetId: clickedResource.resourceId,
-								});
-							} catch (err) {
-								console.error(`Failed to assign gather task:`, err);
-							}
+						act('task', {
+							unitIds: ownSelected(),
+							taskType: 'gather',
+							targetId: clickedResource.resourceId,
 						});
 					},
 				});
@@ -377,16 +346,10 @@ export const onPointerUp = async pointer => {
 				availableActions.push({
 					label: 'Build',
 					onSelect: () => {
-						gameContext.selectedUnits.forEach(async unitId => {
-							try {
-								await assignTask({
-									unitId,
-									taskType: 'build',
-									targetId: clickedBuilding.buildingId,
-								});
-							} catch (err) {
-								console.error(`Failed to assign build task:`, err);
-							}
+						act('task', {
+							unitIds: ownSelected(),
+							taskType: 'build',
+							targetId: clickedBuilding.buildingId,
 						});
 					},
 				});
@@ -468,7 +431,9 @@ async function executeMove(gridPos) {
 		{ x: 1, y: 1 },
 	];
 
-	// Move all selected units
+	const moves = [];
+
+	// A path for each selected unit
 	for (let i = 0; i < units.length; i++) {
 		const unitId = units[i];
 		const unit = gameContext.units.get(unitId);
@@ -523,14 +488,10 @@ async function executeMove(gridPos) {
 				return true;
 			});
 
-			if (path.length > 0) {
-				// Send move command to server
-				try {
-					await moveUnit({ unitId, path });
-				} catch (err) {
-					console.error('Move command error for', unitId, ':', err);
-				}
-			}
+			if (path.length > 0) moves.push({ unitId, path });
 		}
 	}
+
+	// One move for them all, each unit on its own path
+	if (moves.length) await act('move', { moves });
 }
