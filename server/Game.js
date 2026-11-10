@@ -109,9 +109,11 @@ export default class Game extends BaseGame {
 				return [unit, path];
 			});
 
+			// A unit told to move drops what it was doing, rather than walking back to it on arrival
 			for (const [unit, path] of units) {
 				unit.path = path.map(({ x, y }) => ({ x, y }));
 				unit.status = 'moving';
+				unit.currentAction = null;
 
 				this.broadcast('unitMove', { unitId: unit.id, path: unit.path });
 			}

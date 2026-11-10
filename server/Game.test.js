@@ -272,6 +272,27 @@ describe('actions: a player acts as themselves, and what is malformed is refused
 		expect(unit.status).toBe('moving');
 	});
 
+	test('a gatherer told to move stops gathering where it arrives', () => {
+		const { ada, unitsOf } = setup();
+		const [unit] = unitsOf(ada);
+		const forest = [...game.resources.values()].find(resource => resource.type === 'forest');
+		const next = [
+			{ x: unit.position.x + 1, y: unit.position.y },
+			{ x: unit.position.x - 1, y: unit.position.y },
+			{ x: unit.position.x, y: unit.position.y + 1 },
+			{ x: unit.position.x, y: unit.position.y - 1 },
+		].find(cell => game.isWalkable(cell));
+
+		game.act(ada.id, 'task', { unitIds: [unit.id], taskType: 'gather', targetId: forest.id, gatherType: 'wood' });
+		expect(game.act(ada.id, 'move', { moves: [{ unitId: unit.id, path: [next] }] })).toEqual({ ok: true });
+
+		for (let tick = 0; tick < 10; tick++) game.moveUnit(unit, 1);
+
+		expect(unit.position).toEqual(next);
+		expect(unit.status).toBe('idle');
+		expect(unit.currentAction).toBeNull();
+	});
+
 	test('gathering takes a resource there is, and a forest gives food or wood, nothing else', () => {
 		const { ada, unitsOf } = setup();
 		const unitIds = unitsOf(ada).map(unit => unit.id);
