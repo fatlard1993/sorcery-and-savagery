@@ -30,7 +30,7 @@
 		"version": "npm version"
 	},
 	"dependencies": {
-		"@fatlard1993/web-game-framework": "github:fatlard1993/web-game-framework#d388df9",
+		"@fatlard1993/web-game-framework": "github:fatlard1993/web-game-framework#bd90b79",
 		"@vanilla-bean/components": "^7.0.2",
 		"argi-cli": "^1.0.0",
 		"phaser": "^3.90.0"
