@@ -1,7 +1,7 @@
-import { styled, Dialog, Elem } from '@vanilla-bean/components';
+import { styled, Card, Dialog, Elem } from '@vanilla-bean/components';
 import { BUILDINGS } from '../../constants/index.js';
 import gameContext from '../shared/gameContext.js';
-import { CardButton, gold } from '../shared/ui.js';
+import { gold } from '../shared/ui.js';
 
 export default class BuildingMenu extends styled(
 	Dialog,
@@ -66,7 +66,7 @@ export default class BuildingMenu extends styled(
 
 					const canAfford = this.canAffordBuilding(buildingData, player);
 
-					return new CardButton({
+					return new Card({
 						disabled: !canAfford,
 						append: [
 							new Elem({
@@ -85,11 +85,10 @@ export default class BuildingMenu extends styled(
 								});
 							}),
 						],
+						// A disabled card swallows its presses, the pointer's and the keyboard's
 						onPointerPress: () => {
-							if (canAfford) {
-								this.onSelect(buildingType);
-								this.close();
-							}
+							this.onSelect(buildingType);
+							this.close();
 						},
 					});
 				})
