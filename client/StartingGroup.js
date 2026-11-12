@@ -162,7 +162,7 @@ export default class StartingGroup extends styled(
 
 	updateButton() {
 		if (this.confirmButton) {
-			this.confirmButton.elem.disabled = this.getTotalSelected() !== STARTING_PARTY_SIZE;
+			this.confirmButton.options.disabled = this.getTotalSelected() !== STARTING_PARTY_SIZE;
 		}
 	}
 

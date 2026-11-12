@@ -69,6 +69,23 @@ describe("the starting party is this tab's player in the game it's for", () => {
 		]);
 	});
 
+	test('the party is begun only at its full size: the button is disabled through its option until then', async () => {
+		localStorage.setItem('g2', 'p2');
+		view = new StartingGroup({ gameId: 'g2', appendTo: container });
+
+		const begin = screen.getByRole('button', { name: 'Begin Your Conquest' });
+		const more = screen.getByRole('button', { name: 'One more Worker' });
+
+		expect(begin).toBeDisabled();
+		for (let i = 0; i < 7; i++) await userEvent.click(more);
+		expect(begin).toBeEnabled();
+		expect(view.confirmButton.options.disabled).toBe(false);
+
+		await userEvent.click(screen.getByRole('button', { name: 'One fewer Worker' }));
+		expect(begin).toBeDisabled();
+		expect(view.confirmButton.options.disabled).toBe(true);
+	});
+
 	test('a party the game refuses stays to be chosen again', async () => {
 		localStorage.setItem('g2', 'p2');
 		answer = { ok: false, error: 'Player not found or party already chosen' };
