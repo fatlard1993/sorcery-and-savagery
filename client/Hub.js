@@ -10,7 +10,7 @@ export default class Hub extends styled(BaseHub, goldHeading) {
 				...options,
 				toolbar: {
 					heading: 'Game Lobby',
-					left: [new Link({ textContent: 'Home', href: '#/', variant: 'button' })],
+					left: [new Link({ textContent: 'Home', href: '#/', variant: 'button', tooltip: false })],
 					createText: 'Start a game',
 				},
 				noGamesMessage: 'No active games. Create one to start a realm.',
