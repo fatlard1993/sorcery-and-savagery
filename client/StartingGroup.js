@@ -7,7 +7,7 @@ const BASE_CLASSES = ['worker', 'warrior', 'archer', 'mage', 'healer'];
 
 export default class StartingGroup extends styled(
 	View,
-	({ colors, space }) => `
+	({ colors, fontSize, space }) => `
 		& > .variant-bar > .heading {
 			color: ${gold(colors)};
 		}
@@ -26,7 +26,7 @@ export default class StartingGroup extends styled(
 		}
 
 		& .counter {
-			font-size: 1.1em;
+			font-size: ${fontSize.lg};
 			color: ${gold(colors)};
 		}
 
@@ -45,14 +45,14 @@ export default class StartingGroup extends styled(
 		}
 
 		& .unit-name {
-			font-size: 1.15em;
+			font-size: ${fontSize.lg};
 			color: ${gold(colors)};
 		}
 
 		& .unit-description {
 			flex: 1;
 			color: ${colors.muted};
-			font-size: 0.85em;
+			font-size: ${fontSize.sm};
 		}
 
 		& .unit-counter {
@@ -62,7 +62,7 @@ export default class StartingGroup extends styled(
 		}
 
 		& .count-display {
-			font-size: 1.4em;
+			font-size: ${fontSize.xxl};
 			color: ${gold(colors)};
 			min-width: 30px;
 		}
