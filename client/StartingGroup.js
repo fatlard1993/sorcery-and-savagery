@@ -191,6 +191,7 @@ export default class StartingGroup extends styled(
 					append: [
 						new Button({
 							icon: 'minus',
+							variant: 'flat',
 							attributes: { 'aria-label': `One fewer ${unitData.name}` },
 							onPointerPress: () => {
 								if (this.unitCounts[unitType] > 0) {
@@ -203,6 +204,7 @@ export default class StartingGroup extends styled(
 						countDisplay,
 						new Button({
 							icon: 'plus',
+							variant: 'flat',
 							attributes: { 'aria-label': `One more ${unitData.name}` },
 							onPointerPress: () => {
 								if (this.getTotalSelected() < STARTING_PARTY_SIZE) {
