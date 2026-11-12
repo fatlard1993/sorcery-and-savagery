@@ -119,7 +119,7 @@ export default class StartingGroup extends styled(
 
 		this.confirmButton = new Button({
 			appendTo: party,
-			content: 'Begin Your Conquest',
+			content: 'Begin your conquest',
 			disabled: true,
 			onPointerPress: () => this.confirmSelection(),
 		});

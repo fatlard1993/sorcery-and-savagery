@@ -52,7 +52,7 @@ describe("the starting party is this tab's player in the game it's for", () => {
 		const more = screen.getByRole('button', { name: 'One more Worker' });
 
 		for (let i = 0; i < 7; i++) await userEvent.click(more);
-		await userEvent.click(screen.getByRole('button', { name: 'Begin Your Conquest' }));
+		await userEvent.click(screen.getByRole('button', { name: 'Begin your conquest' }));
 	};
 
 	test('with a player stored for each of two games, the party is chosen in the one in the route, as an action', async () => {
@@ -73,7 +73,7 @@ describe("the starting party is this tab's player in the game it's for", () => {
 		localStorage.setItem('g2', 'p2');
 		view = new StartingGroup({ gameId: 'g2', appendTo: container });
 
-		const begin = screen.getByRole('button', { name: 'Begin Your Conquest' });
+		const begin = screen.getByRole('button', { name: 'Begin your conquest' });
 		const more = screen.getByRole('button', { name: 'One more Worker' });
 
 		expect(begin).toBeDisabled();
