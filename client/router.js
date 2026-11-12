@@ -5,15 +5,7 @@ import Create from './Create.js';
 import Join from './Join.js';
 import StartingGroup from './StartingGroup.js';
 import Play from './Play/Play.js';
-
-const paths = {
-	home: '/',
-	hub: '/hub',
-	create: '/create',
-	join: '/join/:gameId',
-	party: '/party/:gameId',
-	play: '/play/:gameId',
-};
+import { paths } from './paths.js';
 
 const views = {
 	[paths.home]: Home,

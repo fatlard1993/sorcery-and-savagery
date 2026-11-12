@@ -1,6 +1,7 @@
 import { styled, Content, Elem, Link, Toolbar, View } from '@vanilla-bean/components';
 
 import { gold } from './shared/ui.js';
+import { href, paths } from './paths.js';
 
 export default class Home extends styled(
 	View,
@@ -47,8 +48,8 @@ export default class Home extends styled(
 					new Elem({
 						className: 'button-group',
 						append: [
-							new Link({ textContent: 'Start a game', href: '#/create', variant: 'button', tooltip: false }),
-							new Link({ textContent: 'Open the lobby', href: '#/hub', tooltip: false }),
+							new Link({ textContent: 'Start a game', href: href(paths.create), variant: 'button', tooltip: false }),
+							new Link({ textContent: 'Open the lobby', href: href(paths.hub), tooltip: false }),
 						],
 					}),
 				],

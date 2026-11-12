@@ -3,6 +3,7 @@ import { enterGame } from '@fatlard1993/web-game-framework/client';
 import { ExitDialog } from '@fatlard1993/web-game-framework/ui/GameRoom';
 import { View } from '@fatlard1993/web-game-framework/ui/layout';
 import gameContext from '../shared/gameContext.js';
+import { href, paths } from '../paths.js';
 import { goldHeading } from '../shared/ui.js';
 import Game from './Game.js';
 import ResourceHUD from './ResourceHUD.js';
@@ -50,11 +51,11 @@ export default class Play extends styled(View, goldHeading) {
 		// this tab joins as someone new), and is sent the players again whenever they change
 		const { game, leave } = await enterGame(gameId, {
 			onState: ({ players }) => this.showPlayers(players),
-			notMember: () => (window.location.href = `#/join/${gameId}`),
+			notMember: () => (window.location.href = href(paths.join, { gameId })),
 			gone: () => {
 				new Notify({ intent: 'danger', content: 'That game is gone' });
 				localStorage.removeItem(gameId);
-				window.location.href = '#/hub';
+				window.location.href = href(paths.hub);
 			},
 		});
 
@@ -62,7 +63,7 @@ export default class Play extends styled(View, goldHeading) {
 
 		if (game.players.find(({ id }) => id === gameContext.playerId)?.choosingParty) {
 			leave();
-			window.location.href = `#/party/${gameId}`;
+			window.location.href = href(paths.party, { gameId });
 			return;
 		}
 

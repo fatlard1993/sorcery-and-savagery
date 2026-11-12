@@ -2,6 +2,7 @@ import { styled, Button, Card, Content, Elem, Notify, Toolbar, View } from '@van
 import { act, enterGame } from '@fatlard1993/web-game-framework/client';
 import { STARTING_PARTY_SIZE, UNITS } from '../constants/index.js';
 import { gold } from './shared/ui.js';
+import { href, paths } from './paths.js';
 
 const BASE_CLASSES = ['worker', 'warrior', 'archer', 'mage', 'healer'];
 
@@ -133,15 +134,15 @@ export default class StartingGroup extends styled(
 		const { gameId } = this.options;
 
 		if (!this.playerId) {
-			window.location.href = `#/join/${gameId}`;
+			window.location.href = href(paths.join, { gameId });
 			return;
 		}
 
 		const { game, leave } = await enterGame(gameId, {
-			notMember: () => (window.location.href = `#/join/${gameId}`),
+			notMember: () => (window.location.href = href(paths.join, { gameId })),
 			gone: () => {
 				new Notify({ intent: 'danger', content: 'That game is gone' });
-				window.location.href = '#/hub';
+				window.location.href = href(paths.hub);
 			},
 		});
 
@@ -149,7 +150,8 @@ export default class StartingGroup extends styled(
 
 		this.addCleanup('game', leave);
 
-		if (!game.players.find(({ id }) => id === this.playerId)?.choosingParty) window.location.href = `#/play/${gameId}`;
+		if (!game.players.find(({ id }) => id === this.playerId)?.choosingParty)
+			window.location.href = href(paths.play, { gameId });
 	}
 
 	updateCounter() {
@@ -233,6 +235,6 @@ export default class StartingGroup extends styled(
 
 		// A refusal is shown by act, and the party stays to be chosen again
 		if ((await act('chooseStartingParty', { startingUnits })).ok)
-			window.location.href = `#/play/${this.options.gameId}`;
+			window.location.href = href(paths.play, { gameId: this.options.gameId });
 	}
 }
