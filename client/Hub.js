@@ -11,7 +11,16 @@ export default class Hub extends styled(BaseHub, goldHeading) {
 				...options,
 				toolbar: {
 					heading: 'Game Lobby',
-					left: [new Link({ textContent: 'Home', href: href(paths.home), variant: 'button', tooltip: false })],
+					// The way back, as Create's and Join's are: the bar's one filled link is Start a game
+					left: [
+						new Link({
+							textContent: 'Home',
+							href: href(paths.home),
+							icon: 'arrow-left',
+							variant: 'flat',
+							tooltip: false,
+						}),
+					],
 					createText: 'Start a game',
 					createHref: href(paths.create),
 				},
