@@ -63,14 +63,17 @@ export default class ResourceHUD extends styled(
 
 		this.elem.innerHTML = '';
 
+		// Each swatch is a picture that means its resource: named for whoever can't tell the colours apart, or see them
 		// Wood
 		new Elem({
 			appendTo: this,
 			className: 'resource',
+			title: 'Wood',
 			append: [
 				new Elem({
 					className: 'resource-icon',
 					style: { backgroundColor: `#${RESOURCE_COLORS.wood.toString(16)}` },
+					attributes: { role: 'img', 'aria-label': 'Wood' },
 				}),
 				new Elem({
 					className: 'resource-amount',
@@ -83,10 +86,12 @@ export default class ResourceHUD extends styled(
 		new Elem({
 			appendTo: this,
 			className: 'resource',
+			title: 'Stone',
 			append: [
 				new Elem({
 					className: 'resource-icon',
 					style: { backgroundColor: `#${RESOURCE_COLORS.stone.toString(16)}` },
+					attributes: { role: 'img', 'aria-label': 'Stone' },
 				}),
 				new Elem({
 					className: 'resource-amount',
@@ -99,10 +104,12 @@ export default class ResourceHUD extends styled(
 		new Elem({
 			appendTo: this,
 			className: 'resource',
+			title: 'Iron',
 			append: [
 				new Elem({
 					className: 'resource-icon',
 					style: { backgroundColor: `#${RESOURCE_COLORS.iron.toString(16)}` },
+					attributes: { role: 'img', 'aria-label': 'Iron' },
 				}),
 				new Elem({
 					className: 'resource-amount',
@@ -115,10 +122,12 @@ export default class ResourceHUD extends styled(
 		new Elem({
 			appendTo: this,
 			className: 'resource',
+			title: 'Water',
 			append: [
 				new Elem({
 					className: 'resource-icon',
 					style: { backgroundColor: `#${RESOURCE_COLORS.water.toString(16)}` },
+					attributes: { role: 'img', 'aria-label': 'Water' },
 				}),
 				new Elem({
 					className: 'resource-amount',
@@ -131,10 +140,12 @@ export default class ResourceHUD extends styled(
 		new Elem({
 			appendTo: this,
 			className: 'resource',
+			title: 'Food',
 			append: [
 				new Elem({
 					className: 'resource-icon',
 					style: { backgroundColor: `#${RESOURCE_COLORS.food.toString(16)}` },
+					attributes: { role: 'img', 'aria-label': 'Food' },
 				}),
 				new Elem({
 					className: 'resource-amount',
