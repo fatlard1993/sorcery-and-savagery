@@ -13,6 +13,7 @@ export default class Hub extends styled(BaseHub, goldHeading) {
 					heading: 'Game Lobby',
 					left: [new Link({ textContent: 'Home', href: href(paths.home), variant: 'button', tooltip: false })],
 					createText: 'Start a game',
+					createHref: href(paths.create),
 				},
 				noGamesMessage: 'No active games. Create one to start a realm.',
 				watch: false,

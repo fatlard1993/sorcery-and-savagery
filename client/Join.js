@@ -14,7 +14,7 @@ export default class Join extends styled(BaseJoin, goldHeading) {
 				formInputs: [{ key: 'name', label: 'Your Name', validate: value => (/\S/.test(value) ? null : 'Required') }],
 				playUrl: href(paths.party, { gameId: options.gameId }),
 				...options,
-				toolbar: { heading: 'Join Game', backText: 'Lobby', joinText: 'Join' },
+				toolbar: { heading: 'Join Game', backText: 'Lobby', backHref: href(paths.hub), joinText: 'Join' },
 			},
 			...children,
 		);

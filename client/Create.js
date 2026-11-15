@@ -3,6 +3,7 @@ import { Create as BaseCreate } from '@fatlard1993/web-game-framework/ui/GameRoo
 
 import { fantasyName } from './shared/names.js';
 import { goldHeading } from './shared/ui.js';
+import { href, paths } from './paths.js';
 
 export default class Create extends styled(BaseCreate, goldHeading) {
 	constructor(options, ...children) {
@@ -11,7 +12,7 @@ export default class Create extends styled(BaseCreate, goldHeading) {
 				formData: { name: `${fantasyName()}'s Realm` },
 				formInputs: [{ key: 'name', label: 'Realm Name', validate: value => (/\S/.test(value) ? null : 'Required') }],
 				...options,
-				toolbar: { heading: 'New Game', backText: 'Lobby', createText: 'Create' },
+				toolbar: { heading: 'New Game', backText: 'Lobby', backHref: href(paths.hub), createText: 'Create' },
 			},
 			...children,
 		);
