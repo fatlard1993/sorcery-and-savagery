@@ -31,7 +31,7 @@
 	},
 	"dependencies": {
 		"@fatlard1993/web-game-framework": "github:fatlard1993/web-game-framework#1543d3d",
-		"@vanilla-bean/components": "^7.5.1",
+		"@vanilla-bean/components": "^7.5.2",
 		"argi-cli": "^1.0.0",
 		"phaser": "^3.90.0"
 	},
